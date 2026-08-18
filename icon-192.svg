@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+    <rect width="192" height="192" rx="32" fill="#000"/>
+    <text x="96" y="108" text-anchor="middle"
+          font-family="monospace" font-weight="bold" font-size="80"
+          fill="#00f0ff">72</text>
+    <text x="96" y="140" text-anchor="middle"
+          font-family="monospace" font-size="14" fill="#2a3a4a"
+          letter-spacing="4">KM/H</text>
+    <rect x="24" y="155" width="144" height="5" rx="2.5" fill="#111520"/>
+    <rect x="24" y="155" width="86" height="5" rx="2.5" fill="#ffcc00"/>
+</svg>

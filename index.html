@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HUD Speed</title>
+    <meta name="description" content="A heads-up display speedometer PWA. Place your phone on the dashboard and read your speed off the windshield.">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HUD Speed">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.svg">
+    <link rel="icon" type="image/svg+xml" href="icon-192.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="loader" id="loader"><span>INITIALIZING</span></div>
+    <div class="flash" id="flash"></div>
+
+    <div class="hud" id="hud">
+        <div class="mirror-wrap" id="mirrorWrap">
+            <div class="clock fi" id="clock" style="animation-delay:.1s">--:--:--</div>
+
+            <div class="spd-wrap fi" style="animation-delay:.2s">
+                <div class="spd" id="spd">0</div>
+            </div>
+
+            <div class="unit fi" style="animation-delay:.25s">KM / H</div>
+
+            <div class="bar-wrap fi" style="animation-delay:.3s">
+                <div class="bar-track">
+                    <div class="bar-fill" id="barFill"></div>
+                    <div class="bar-dot" id="barDot"></div>
+                </div>
+                <div class="bar-lbl">
+                    <span>0</span><span>40</span><span>80</span><span>120</span><span>160</span>
+                </div>
+            </div>
+
+            <div class="stats fi" style="animation-delay:.4s">
+                <div class="st"><div class="st-l">MAX</div><div class="st-v" id="vMax">0</div></div>
+                <div class="st"><div class="st-l">DIST</div><div class="st-v" id="vDst">0.0</div></div>
+            </div>
+
+            <div class="road fi scan" id="road" style="animation-delay:.5s">Waiting for GPS&hellip;</div>
+        </div>
+
+        <div class="ctrl fi" style="animation-delay:.6s">
+            <button class="btn go" id="bStart">Start</button>
+            <button class="btn" id="bMirror">Mirror</button>
+            <button class="btn" id="bReset">Reset</button>
+        </div>
+    </div>
+
+    <script src="app.js" defer></script>
+</body>
+</html>
