@@ -8,7 +8,7 @@
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a0a0c">
 </head>
-<body>
+<body id="app-body" class="speed-tier-normal">
   <div class="app-container">
     <!-- Top Bar: Clock & Mirror/HUD toggle -->
     <header class="top-bar">
@@ -24,8 +24,8 @@
       <button id="btn-gforce-toggle" class="theme-btn accent">Enable G-Force</button>
     </nav>
 
-    <!-- Main Gauge Container -->
-    <main class="gauge-wrapper">
+    <!-- Main Gauge Container with Dynamic Speed Border -->
+    <main id="gauge-frame" class="gauge-wrapper border-normal">
       <canvas id="speedometerCanvas"></canvas>
     </main>
 
@@ -46,7 +46,7 @@
       </div>
     </footer>
 
-    <!-- G-Force Panel (Hidden until requested/enabled) -->
+    <!-- G-Force Panel -->
     <section id="gforce-panel" class="gforce-panel hidden">
       <div class="g-stat">
         <span class="g-label">LAT (X)</span>
