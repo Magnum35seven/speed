@@ -1,62 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>HUD Speed</title>
-    <meta name="description" content="A heads-up display speedometer PWA. Place your phone on the dashboard and read your speed off the windshield.">
-    <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="HUD Speed">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.svg">
-    <link rel="icon" type="image/svg+xml" href="icon-192.svg">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HUD Speedometer</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a0a0c">
 </head>
 <body>
+  <div class="app-container">
+    <!-- Top Bar: Clock & Mirror/HUD toggle -->
+    <header class="top-bar">
+      <div id="clock" class="clock-display">00:00:00</div>
+      <button id="hud-toggle" class="icon-btn" title="Mirror Display (HUD Mode)">🪞 HUD</button>
+    </header>
 
-    <div class="loader" id="loader"><span>INITIALIZING</span></div>
-    <div class="flash" id="flash"></div>
+    <!-- Theme Switcher Navigation -->
+    <nav class="theme-bar">
+      <button id="btn-analog" class="theme-btn active">Analog</button>
+      <button id="btn-minimalist" class="theme-btn">Minimalist</button>
+      <button id="btn-sport" class="theme-btn">Sport</button>
+      <button id="btn-gforce-toggle" class="theme-btn accent">Enable G-Force</button>
+    </nav>
 
-    <div class="hud" id="hud">
-        <div class="mirror-wrap" id="mirrorWrap">
-            <div class="clock fi" id="clock" style="animation-delay:.1s">--:--:--</div>
+    <!-- Main Gauge Container -->
+    <main class="gauge-wrapper">
+      <canvas id="speedometerCanvas"></canvas>
+    </main>
 
-            <div class="spd-wrap fi" style="animation-delay:.2s">
-                <div class="spd" id="spd">0</div>
-            </div>
+    <!-- Telemetry Footer Details -->
+    <footer class="telemetry-bar">
+      <div class="telemetry-item">
+        <span class="label">MAX SPEED</span>
+        <span class="value"><strong id="max-speed">0</strong> <small>KM/H</small></span>
+      </div>
+      <div class="telemetry-item">
+        <span class="label">ROAD</span>
+        <span id="road-name" class="value truncate">Locating...</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="label">DISTANCE</span>
+        <span class="value"><strong id="trip-distance">0.0</strong> <small>KM</small></span>
+      </div>
+    </footer>
 
-            <div class="unit fi" style="animation-delay:.25s">KM / H</div>
+    <!-- G-Force Panel (Hidden until requested/enabled) -->
+    <section id="gforce-panel" class="gforce-panel hidden">
+      <div class="g-stat">
+        <span class="g-label">LAT (X)</span>
+        <span id="g-x" class="g-value">0.00</span>
+      </div>
+      <div class="g-stat">
+        <span class="g-label">LONG (Y)</span>
+        <span id="g-y" class="g-value">0.00</span>
+      </div>
+      <div class="g-stat">
+        <span class="g-label">TOTAL FORCE</span>
+        <span id="g-total" class="g-value highlight">0.00 G</span>
+      </div>
+    </section>
+  </div>
 
-            <div class="bar-wrap fi" style="animation-delay:.3s">
-                <div class="bar-track">
-                    <div class="bar-fill" id="barFill"></div>
-                    <div class="bar-dot" id="barDot"></div>
-                </div>
-                <div class="bar-lbl">
-                    <span>0</span><span>40</span><span>80</span><span>120</span><span>160</span>
-                </div>
-            </div>
-
-            <div class="stats fi" style="animation-delay:.4s">
-                <div class="st"><div class="st-l">MAX</div><div class="st-v" id="vMax">0</div></div>
-                <div class="st"><div class="st-l">DIST</div><div class="st-v" id="vDst">0.0</div></div>
-            </div>
-
-            <div class="road fi scan" id="road" style="animation-delay:.5s">Waiting for GPS&hellip;</div>
-        </div>
-
-        <div class="ctrl fi" style="animation-delay:.6s">
-            <button class="btn go" id="bStart">Start</button>
-            <button class="btn" id="bMirror">Mirror</button>
-            <button class="btn" id="bReset">Reset</button>
-        </div>
-    </div>
-
-    <script src="app.js" defer></script>
+  <script src="app.js"></script>
 </body>
 </html>
