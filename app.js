@@ -34,7 +34,6 @@ class GForceTracker {
     const accel = event.accelerationIncludingGravity || event.acceleration;
     if (!accel) return;
 
-    // Normalize m/s^2 to G-Force (1G = 9.80665 m/s^2)
     const xG = (accel.x || 0) / 9.80665;
     const yG = (accel.y || 0) / 9.80665;
     const zG = (accel.z || 0) / 9.80665;
@@ -48,17 +47,18 @@ class GForceTracker {
   }
 }
 
-// --- 2. Canvas Render Engine (Themes + Smoothing) ---
+// --- 2. Canvas Render Engine (Themes + Speed Brackets) ---
 class SpeedometerRenderer {
-  constructor(canvas) {
+  constructor(canvas, frameElement) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.frameElement = frameElement;
     
     this.targetSpeed = 0;    // Filtered GPS target speed (km/h)
     this.displayedSpeed = 0;  // Interpolated animation speed
     this.maxSpeed = 160;     // Gauge ceiling mark
     this.smoothingFactor = 0.15; // Low-pass EMA weight
-    this.theme = 'analog';   // 'analog' | 'minimalist' | 'sport'
+    this.theme = 'analog';   // Default active mode
 
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -78,7 +78,6 @@ class SpeedometerRenderer {
   updateGpsSpeed(speedMps) {
     if (speedMps === null || speedMps < 0) return;
     const speedKmh = speedMps * 3.6;
-    // Exponential Moving Average low-pass filter to strip GPS jitter
     this.targetSpeed = (speedKmh * this.smoothingFactor) + (this.targetSpeed * (1 - this.smoothingFactor));
   }
 
@@ -86,9 +85,32 @@ class SpeedometerRenderer {
     this.theme = themeName;
   }
 
+  // Speed Bracket Colors: 0-60 (Default), 61-80 (Green), 81+ (Red)
+  getSpeedColor(speed) {
+    if (speed > 80) return '#ff453a'; // Warning Red
+    if (speed > 60) return '#30d158'; // Moderate Green
+    return '#0a84ff';                // Cool Blue / Standard
+  }
+
+  updateThemeBracket(speed) {
+    if (!this.frameElement) return;
+
+    this.frameElement.classList.remove('border-normal', 'border-moderate', 'border-warning');
+    if (speed > 80) {
+      this.frameElement.classList.add('border-warning');
+    } else if (speed > 60) {
+      this.frameElement.classList.add('border-moderate');
+    } else {
+      this.frameElement.classList.add('border-normal');
+    }
+  }
+
   render() {
-    // Smooth frame-by-frame needle animation (Linear Interpolation)
+    // Smooth frame interpolation
     this.displayedSpeed += (this.targetSpeed - this.displayedSpeed) * 0.12;
+
+    // Update dynamic outer border based on speed tier
+    this.updateThemeBracket(this.displayedSpeed);
 
     this.ctx.clearRect(0, 0, this.width, this.height);
 
@@ -119,15 +141,14 @@ class SpeedometerRenderer {
     const cx = width / 2;
     const cy = height / 2;
     const radius = Math.min(width, height) * 0.38;
+    const activeColor = this.getSpeedColor(displayedSpeed);
 
-    // Background Arc Track
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0.75 * Math.PI, 2.25 * Math.PI);
     ctx.lineWidth = 10;
     ctx.strokeStyle = '#2c2c2e';
     ctx.stroke();
 
-    // Ticks
     for (let i = 0; i <= this.maxSpeed; i += 20) {
       const angle = this.getAngle(i);
       const x1 = cx + Math.cos(angle) * (radius - 12);
@@ -143,22 +164,20 @@ class SpeedometerRenderer {
       ctx.stroke();
     }
 
-    // Dynamic Needle
+    // Needle adopts bracket color
     const needleAngle = this.getAngle(displayedSpeed);
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + Math.cos(needleAngle) * (radius - 10), cy + Math.sin(needleAngle) * (radius - 10));
     ctx.lineWidth = 4;
-    ctx.strokeStyle = '#ff3b30';
+    ctx.strokeStyle = activeColor;
     ctx.stroke();
 
-    // Hub Cap
     ctx.beginPath();
     ctx.arc(cx, cy, 8, 0, Math.PI * 2);
-    ctx.fillStyle = '#ff3b30';
+    ctx.fillStyle = activeColor;
     ctx.fill();
 
-    // Center Readout
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 36px monospace';
     ctx.textAlign = 'center';
@@ -173,8 +192,9 @@ class SpeedometerRenderer {
     const { ctx, width, height, displayedSpeed } = this;
     const cx = width / 2;
     const cy = height / 2;
+    const activeColor = this.getSpeedColor(displayedSpeed);
 
-    ctx.fillStyle = '#0a84ff';
+    ctx.fillStyle = activeColor;
     ctx.font = 'bold 100px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -191,18 +211,14 @@ class SpeedometerRenderer {
     const cx = width / 2;
     const cy = height / 2;
     const radius = Math.min(width, height) * 0.38;
+    const activeColor = this.getSpeedColor(displayedSpeed);
 
-    // Glowing Speed Bar Accent
     const activeAngle = this.getAngle(displayedSpeed);
-    const gradient = ctx.createLinearGradient(0, height, width, 0);
-    gradient.addColorStop(0, '#30d158');
-    gradient.addColorStop(0.6, '#ffd60a');
-    gradient.addColorStop(1, '#ff453a');
 
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0.75 * Math.PI, activeAngle);
     ctx.lineWidth = 18;
-    ctx.strokeStyle = gradient;
+    ctx.strokeStyle = activeColor;
     ctx.lineCap = 'round';
     ctx.stroke();
 
@@ -212,15 +228,15 @@ class SpeedometerRenderer {
     ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy + 12);
 
     ctx.font = 'bold 14px sans-serif';
-    ctx.fillStyle = '#ff453a';
+    ctx.fillStyle = activeColor;
     ctx.fillText('SPORT', cx, cy + 38);
   }
 }
 
 // --- 3. App Controller ---
 document.addEventListener('DOMContentLoaded', () => {
-  // Elements
   const canvas = document.getElementById('speedometerCanvas');
+  const frameElement = document.getElementById('gauge-frame');
   const clockEl = document.getElementById('clock');
   const maxSpeedEl = document.getElementById('max-speed');
   const tripDistanceEl = document.getElementById('trip-distance');
@@ -228,32 +244,26 @@ document.addEventListener('DOMContentLoaded', () => {
   const suburbNameEl = document.getElementById('suburb-name');
   const hudBtn = document.getElementById('hud-toggle');
   
-  // State
   let maxSpeedKmh = 0;
   let totalDistanceKm = 0;
   let lastCoords = null;
 
-  // Initialize Canvas Renderer
-  const renderer = new SpeedometerRenderer(canvas);
+  const renderer = new SpeedometerRenderer(canvas, frameElement);
 
-  // Clock Update
   setInterval(() => {
     const now = new Date();
     clockEl.textContent = now.toTimeString().split(' ')[0];
   }, 1000);
 
-  // HUD Mirror Mode Toggle
   hudBtn.addEventListener('click', () => {
     document.body.classList.toggle('hud-mode');
     hudBtn.classList.toggle('active');
   });
 
-  // Screen Wake Lock API
   if ('wakeLock' in navigator) {
     navigator.wakeLock.request('screen').catch((err) => console.log('Wake Lock Error:', err));
   }
 
-  // Geolocation Observer
   if ('geolocation' in navigator) {
     navigator.geolocation.watchPosition(
       (pos) => {
@@ -263,13 +273,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (speedMps !== null && speedMps > 0) {
           const currentKmh = speedMps * 3.6;
           
-          // Track Max Speed
           if (currentKmh > maxSpeedKmh) {
             maxSpeedKmh = currentKmh;
             maxSpeedEl.textContent = Math.round(maxSpeedKmh);
           }
 
-          // Distance calculation (Haversine formula)
           if (lastCoords) {
             const dist = calcDistanceKm(
               lastCoords.latitude,
@@ -282,7 +290,6 @@ document.addEventListener('DOMContentLoaded', () => {
           }
           lastCoords = pos.coords;
 
-          // Reverse Geocoding via Nominatim OpenStreetMap API
           fetchLocationInfo(pos.coords.latitude, pos.coords.longitude);
         }
       },
@@ -291,11 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  // Reverse Geocode Handler (Debounced)
   let lastGeocodeTime = 0;
   async function fetchLocationInfo(lat, lon) {
     const now = Date.now();
-    if (now - lastGeocodeTime < 10000) return; // Limit requests to once per 10s
+    if (now - lastGeocodeTime < 10000) return;
     lastGeocodeTime = now;
 
     try {
@@ -311,7 +317,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Distance Utility
   function calcDistanceKm(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -322,7 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
   }
 
-  // Theme Switching Navigation Event Handlers
   const themeBtns = document.querySelectorAll('.theme-btn:not(#btn-gforce-toggle)');
   themeBtns.forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -338,7 +342,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // G-Force Panel Handler
   const gTracker = new GForceTracker((data) => {
     document.getElementById('g-x').textContent = data.x;
     document.getElementById('g-y').textContent = data.y;
@@ -356,7 +359,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Register PWA Service Worker
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch((err) => console.log('SW registration failed:', err));
   }
