@@ -12,6 +12,7 @@
   <div class="app-container">
     <!-- Top Bar: Clock & Controls -->
     <header class="top-bar">
+      <div class="top-spacer"></div>
       <div id="clock" class="clock-display">00:00</div>
       <div class="top-controls">
         <button id="reset-btn" class="icon-btn danger" title="Reset Max Speed & Distance">🔄 Reset</button>
@@ -27,7 +28,7 @@
       <button id="btn-gforce-toggle" class="theme-btn accent">Enable G-Force</button>
     </nav>
 
-    <!-- Main Gauge Container with Dynamic Speed Border -->
+    <!-- Main Gauge Container -->
     <main id="gauge-frame" class="gauge-wrapper border-normal">
       <canvas id="speedometerCanvas"></canvas>
     </main>
@@ -40,8 +41,8 @@
       </div>
       <div class="telemetry-item location-item">
         <span class="label">LOCATION</span>
-        <span id="road-name" class="value truncate">Locating...</span>
-        <span id="suburb-name" class="sub-label truncate">---</span>
+        <span id="road-name" class="value location-primary truncate">Locating...</span>
+        <span id="suburb-name" class="sub-label location-secondary truncate">---</span>
       </div>
       <div class="telemetry-item">
         <span class="label">DISTANCE</span>
