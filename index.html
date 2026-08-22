@@ -10,10 +10,13 @@
 </head>
 <body id="app-body" class="speed-tier-normal">
   <div class="app-container">
-    <!-- Top Bar: Clock & Mirror/HUD toggle -->
+    <!-- Top Bar: Clock & Controls -->
     <header class="top-bar">
-      <div id="clock" class="clock-display">00:00:00</div>
-      <button id="hud-toggle" class="icon-btn" title="Mirror Display (HUD Mode)">🪞 HUD</button>
+      <div id="clock" class="clock-display">00:00</div>
+      <div class="top-controls">
+        <button id="reset-btn" class="icon-btn danger" title="Reset Max Speed & Distance">🔄 Reset</button>
+        <button id="hud-toggle" class="icon-btn" title="Mirror Display (HUD Mode)">🪞 HUD</button>
+      </div>
     </header>
 
     <!-- Theme Switcher Navigation -->
