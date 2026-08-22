@@ -132,7 +132,7 @@ class SpeedometerRenderer {
     return (0.75 + pct * 1.5) * Math.PI;
   }
 
-  // --- Theme 1: Analog Gauge with Dial Numbers ---
+  // --- Theme 1: Analog Gauge ---
   drawAnalog() {
     const { ctx, width, height, displayedSpeed } = this;
     const cx = width / 2;
@@ -140,14 +140,12 @@ class SpeedometerRenderer {
     const radius = Math.min(width, height) * 0.38;
     const activeColor = this.getSpeedColor(displayedSpeed);
 
-    // Outer Dial Track
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0.75 * Math.PI, 2.25 * Math.PI);
     ctx.lineWidth = 10;
     ctx.strokeStyle = '#2c2c2e';
     ctx.stroke();
 
-    // Ticks & Numerical Labels
     for (let i = 0; i <= this.maxSpeed; i += 20) {
       const angle = this.getAngle(i);
       const x1 = cx + Math.cos(angle) * (radius - 12);
@@ -171,7 +169,6 @@ class SpeedometerRenderer {
       ctx.fillText(`${i}`, tx, ty);
     }
 
-    // Needle
     const needleAngle = this.getAngle(displayedSpeed);
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -185,7 +182,6 @@ class SpeedometerRenderer {
     ctx.fillStyle = activeColor;
     ctx.fill();
 
-    // Digital Center Speed
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 42px monospace';
     ctx.textAlign = 'center';
@@ -204,17 +200,17 @@ class SpeedometerRenderer {
     const activeColor = this.getSpeedColor(displayedSpeed);
 
     ctx.fillStyle = activeColor;
-    ctx.font = '900 140px monospace';
+    ctx.font = '900 130px monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy - 15);
+    ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy - 10);
 
     ctx.fillStyle = '#8e8e93';
-    ctx.font = 'bold 20px sans-serif';
-    ctx.fillText('KM/H', cx, cy + 80);
+    ctx.font = 'bold 18px sans-serif';
+    ctx.fillText('KM/H', cx, cy + 70);
   }
 
-  // --- Theme 3: Sport Telemetry ---
+  // --- Theme 3: Sport Telemetry (Fixed Arc rendering) ---
   drawSport() {
     const { ctx, width, height, displayedSpeed } = this;
     const cx = width / 2;
@@ -222,24 +218,39 @@ class SpeedometerRenderer {
     const radius = Math.min(width, height) * 0.38;
     const activeColor = this.getSpeedColor(displayedSpeed);
 
-    const activeAngle = this.getAngle(displayedSpeed);
+    const startAngle = 0.75 * Math.PI;
+    const maxAngle = 2.25 * Math.PI;
+    const pct = Math.min(Math.max(displayedSpeed, 0), this.maxSpeed) / this.maxSpeed;
+    const currentAngle = startAngle + pct * (maxAngle - startAngle);
 
+    // Track Background
     ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0.75 * Math.PI, activeAngle);
-    ctx.lineWidth = 20;
-    ctx.strokeStyle = activeColor;
+    ctx.arc(cx, cy, radius, startAngle, maxAngle);
+    ctx.lineWidth = 18;
+    ctx.strokeStyle = '#1c1c1e';
     ctx.lineCap = 'round';
     ctx.stroke();
 
+    // Active Speed Progress Arc
+    if (displayedSpeed > 0) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, startAngle, currentAngle);
+      ctx.lineWidth = 18;
+      ctx.strokeStyle = activeColor;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // Central Speed readout
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 110px sans-serif';
+    ctx.font = '900 95px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy - 10);
 
-    ctx.font = 'bold 18px sans-serif';
+    ctx.font = 'bold 16px sans-serif';
     ctx.fillStyle = activeColor;
-    ctx.fillText('SPORT KM/H', cx, cy + 65);
+    ctx.fillText('SPORT KM/H', cx, cy + 60);
   }
 }
 
@@ -261,7 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const renderer = new SpeedometerRenderer(canvas, frameElement);
 
-  // Clock formatter (HH:MM)
   const updateClock = () => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -271,13 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
   updateClock();
   setInterval(updateClock, 1000);
 
-  // HUD Mirroring
   hudBtn.addEventListener('click', () => {
     document.body.classList.toggle('hud-mode');
     hudBtn.classList.toggle('active');
   });
 
-  // Trip Reset Action
   resetBtn.addEventListener('click', () => {
     maxSpeedKmh = 0;
     totalDistanceKm = 0;
@@ -295,7 +303,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const speedMps = pos.coords.speed;
         renderer.updateGpsSpeed(speedMps);
 
-        // Reverse geocode location immediately, even at 0 km/h
         if (pos.coords.latitude && pos.coords.longitude) {
           fetchLocationInfo(pos.coords.latitude, pos.coords.longitude);
         }
