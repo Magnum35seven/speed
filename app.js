@@ -1,320 +1,360 @@
-(function () {
-    'use strict';
+/**
+ * HUD Speedometer - Complete PWA Engine
+ */
 
-    /* ──────────────────────────
-       DOM refs
-    ────────────────────────── */
-    const $ = (id) => document.getElementById(id);
+// --- 1. Accelerometer / G-Force Module ---
+class GForceTracker {
+  constructor(onUpdate) {
+    this.onUpdate = onUpdate;
+    this.isListening = false;
+  }
 
-    const elSpd    = $('spd');
-    const elFill   = $('barFill');
-    const elDot    = $('barDot');
-    const elMax    = $('vMax');
-    const elDst    = $('vDst');
-    const elRoad   = $('road');
-    const elClock  = $('clock');
-    const elLoader = $('loader');
-    const elFlash  = $('flash');
-    const bStart   = $('bStart');
-    const bReset   = $('bReset');
-    const bMirror  = $('bMirror');
-    const elMirrorWrap = $('mirrorWrap');
-
-    /* ──────────────────────────
-       State
-    ────────────────────────── */
-    let on       = false;
-    let wid      = null;   // geolocation watch id
-    let wl       = null;   // wake lock
-    let raw      = 0;      // latest speed km/h
-    let disp     = 0;      // animated display speed
-    let mx       = 0;      // max speed
-    let dst      = 0;      // distance km
-    let tLat     = null;   // last lat for distance
-    let tLon     = null;   // last lon for distance
-    let rLat     = null;   // last road-lookup lat
-    let rLon     = null;   // last road-lookup lon
-    let rT       = 0;      // last road-lookup time
-    let fix      = false;  // got first GPS fix
-
-    /* ──────────────────────────
-       Colour ramp for speed number
-    ────────────────────────── */
-    const RAMP = [
-        [0, 240, 255],   // cyan
-        [0, 255, 136],   // green
-        [255, 204, 0],   // yellow
-        [255, 102, 0],   // orange
-        [255, 0, 68]     // red
-    ];
-
-    function lerp(a, b, t) {
-        return a + (b - a) * t;
-    }
-
-    function rampColour(speed) {
-        const p = Math.min(Math.max(speed / 160, 0), 1) * (RAMP.length - 1);
-        const i = Math.min(Math.floor(p), RAMP.length - 2);
-        const t = p - i;
-        const r = Math.round(lerp(RAMP[i][0], RAMP[i + 1][0], t));
-        const g = Math.round(lerp(RAMP[i][1], RAMP[i + 1][1], t));
-        const b = Math.round(lerp(RAMP[i][2], RAMP[i + 1][2], t));
-        return { r, g, b, css: `rgb(${r},${g},${b})` };
-    }
-
-    /* ──────────────────────────
-       Haversine (km)
-    ────────────────────────── */
-    function haversine(lat1, lon1, lat2, lon2) {
-        const EARTH = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos(lat1 * Math.PI / 180) *
-            Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLon / 2) ** 2;
-        return EARTH * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
-    /* ──────────────────────────
-       Clock
-    ────────────────────────── */
-    function tick() {
-        const d = new Date();
-        elClock.textContent = [d.getHours(), d.getMinutes()]
-            .map((n) => String(n).padStart(2, '0'))
-            .join(':');
-    }
-    setInterval(tick, 1000);
-    tick();
-
-    /* ──────────────────────────
-       Flash message
-    ────────────────────────── */
-    function flash(msg) {
-        elFlash.textContent = msg;
-        elFlash.classList.add('on');
-        setTimeout(() => elFlash.classList.remove('on'), 1800);
-    }
-
-    /* ──────────────────────────
-       Wake lock
-    ────────────────────────── */
-    async function acquireLock() {
-        try {
-            wl = await navigator.wakeLock.request('screen');
-            wl.addEventListener('release', () => {
-                wl = null;
-            });
-        } catch (_) { /* unsupported */ }
-    }
-
-    function releaseLock() {
-        if (wl) {
-            wl.release();
-            wl = null;
+  async requestPermissionAndStart() {
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+      try {
+        const permissionState = await DeviceMotionEvent.requestPermission();
+        if (permissionState === 'granted') {
+          this.start();
         }
+      } catch (err) {
+        console.error('DeviceMotion permission denied:', err);
+      }
+    } else {
+      this.start();
     }
+  }
 
-    // Re-acquire the wake lock whenever the page becomes visible again.
-    // The browser auto-releases it on backgrounding (app switch, screen
-    // lock, phone call, etc.) — this restores it as soon as we're back
-    // in the foreground, as long as tracking is still meant to be on.
-    document.addEventListener('visibilitychange', () => {
-        if (on && document.visibilityState === 'visible' && !wl) {
-            acquireLock();
-        }
+  start() {
+    if (this.isListening) return;
+    window.addEventListener('devicemotion', (e) => this.handleMotion(e), true);
+    this.isListening = true;
+  }
+
+  handleMotion(event) {
+    const accel = event.accelerationIncludingGravity || event.acceleration;
+    if (!accel) return;
+
+    // Normalize m/s^2 to G-Force (1G = 9.80665 m/s^2)
+    const xG = (accel.x || 0) / 9.80665;
+    const yG = (accel.y || 0) / 9.80665;
+    const zG = (accel.z || 0) / 9.80665;
+    const totalG = Math.sqrt(xG * xG + yG * yG + zG * zG);
+
+    this.onUpdate({
+      x: xG.toFixed(2),
+      y: yG.toFixed(2),
+      total: totalG.toFixed(2)
     });
+  }
+}
 
-    /* ──────────────────────────
-       Road name (Nominatim — free, no key)
-    ────────────────────────── */
-    async function fetchRoad(lat, lon) {
-        const now = Date.now();
-        if (now - rT < 6000) return;                  // throttle
-        if (rLat !== null && haversine(rLat, rLon, lat, lon) < 0.005) return;
-        rT = now;
+// --- 2. Canvas Render Engine (Themes + Smoothing) ---
+class SpeedometerRenderer {
+  constructor(canvas) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    
+    this.targetSpeed = 0;    // Filtered GPS target speed (km/h)
+    this.displayedSpeed = 0;  // Interpolated animation speed
+    this.maxSpeed = 160;     // Gauge ceiling mark
+    this.smoothingFactor = 0.15; // Low-pass EMA weight
+    this.theme = 'analog';   // 'analog' | 'minimalist' | 'sport'
 
-        try {
-            elRoad.classList.add('scan');
-            const url =
-                `https://nominatim.openstreetmap.org/reverse` +
-                `?lat=${lat}&lon=${lon}&format=json&zoom=18&addressdetails=1`;
-            const res = await fetch(url, {
-                headers: { 'Accept-Language': 'en' }
-            });
-            const data = await res.json();
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+    this.render();
+  }
 
-            if (data.error) {
-                elRoad.textContent = '\u2014';
-                elRoad.classList.remove('scan');
-                return;
-            }
+  resize() {
+    const rect = this.canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    this.canvas.width = rect.width * dpr;
+    this.canvas.height = rect.height * dpr;
+    this.ctx.scale(dpr, dpr);
+    this.width = rect.width;
+    this.height = rect.height;
+  }
 
-            const addr = data.address || {};
-            const name =
-                addr.road       ||
-                addr.pedestrian ||
-                addr.footway    ||
-                addr.cycleway   ||
-                addr.neighbourhood ||
-                addr.suburb     ||
-                '';
+  updateGpsSpeed(speedMps) {
+    if (speedMps === null || speedMps < 0) return;
+    const speedKmh = speedMps * 3.6;
+    // Exponential Moving Average low-pass filter to strip GPS jitter
+    this.targetSpeed = (speedKmh * this.smoothingFactor) + (this.targetSpeed * (1 - this.smoothingFactor));
+  }
 
-            elRoad.textContent = name || (data.display_name || '').split(',')[0] || '\u2014';
-            elRoad.classList.remove('scan');
-            rLat = lat;
-            rLon = lon;
-        } catch (_) {
-            elRoad.textContent = 'Signal weak';
-            elRoad.classList.remove('scan');
-        }
+  setTheme(themeName) {
+    this.theme = themeName;
+  }
+
+  render() {
+    // Smooth frame-by-frame needle animation (Linear Interpolation)
+    this.displayedSpeed += (this.targetSpeed - this.displayedSpeed) * 0.12;
+
+    this.ctx.clearRect(0, 0, this.width, this.height);
+
+    switch (this.theme) {
+      case 'minimalist':
+        this.drawMinimalist();
+        break;
+      case 'sport':
+        this.drawSport();
+        break;
+      case 'analog':
+      default:
+        this.drawAnalog();
+        break;
     }
 
-    /* ──────────────────────────
-       Geolocation handler
-    ────────────────────────── */
-    function onPosition(pos) {
-        const { latitude: lat, longitude: lon, speed, accuracy } = pos.coords;
+    requestAnimationFrame(() => this.render());
+  }
 
-        if (accuracy > 50) return;                    // too inaccurate
+  getAngle(speed) {
+    const pct = Math.min(Math.max(speed, 0), this.maxSpeed) / this.maxSpeed;
+    return (0.75 + pct * 1.5) * Math.PI;
+  }
 
-        if (!fix) {
-            fix = true;
-            elLoader.classList.add('out');
-            flash('GPS LOCKED');
-        }
+  // --- Theme 1: Analog Gauge ---
+  drawAnalog() {
+    const { ctx, width, height, displayedSpeed } = this;
+    const cx = width / 2;
+    const cy = height / 2;
+    const radius = Math.min(width, height) * 0.38;
 
-        const kmh = (speed != null && speed >= 0) ? speed * 3.6 : 0;
-        raw = Math.round(kmh);
+    // Background Arc Track
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0.75 * Math.PI, 2.25 * Math.PI);
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#2c2c2e';
+    ctx.stroke();
 
-        if (raw > mx) {
-            mx = raw;
-            elMax.textContent = mx;
-        }
+    // Ticks
+    for (let i = 0; i <= this.maxSpeed; i += 20) {
+      const angle = this.getAngle(i);
+      const x1 = cx + Math.cos(angle) * (radius - 12);
+      const y1 = cy + Math.sin(angle) * (radius - 12);
+      const x2 = cx + Math.cos(angle) * radius;
+      const y2 = cy + Math.sin(angle) * radius;
 
-        if (raw > 3 && tLat !== null) {
-            const d = haversine(tLat, tLon, lat, lon);
-            if (d > 0.0005 && d < 0.5) dst += d;
-        }
-
-        tLat = lat;
-        tLon = lon;
-        elDst.textContent = dst < 100 ? dst.toFixed(1) : Math.round(dst);
-
-        fetchRoad(lat, lon);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#8e8e93';
+      ctx.stroke();
     }
 
-    function onError(err) {
-        if (err.code === 1) {
-            elRoad.textContent = 'Location denied';
+    // Dynamic Needle
+    const needleAngle = this.getAngle(displayedSpeed);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(needleAngle) * (radius - 10), cy + Math.sin(needleAngle) * (radius - 10));
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = '#ff3b30';
+    ctx.stroke();
+
+    // Hub Cap
+    ctx.beginPath();
+    ctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff3b30';
+    ctx.fill();
+
+    // Center Readout
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy + radius * 0.55);
+    ctx.font = '12px sans-serif';
+    ctx.fillStyle = '#8e8e93';
+    ctx.fillText('KM/H', cx, cy + radius * 0.55 + 18);
+  }
+
+  // --- Theme 2: Minimalist ---
+  drawMinimalist() {
+    const { ctx, width, height, displayedSpeed } = this;
+    const cx = width / 2;
+    const cy = height / 2;
+
+    ctx.fillStyle = '#0a84ff';
+    ctx.font = 'bold 100px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy - 10);
+
+    ctx.fillStyle = '#8e8e93';
+    ctx.font = '16px sans-serif';
+    ctx.fillText('KM/H', cx, cy + 60);
+  }
+
+  // --- Theme 3: Sport Telemetry ---
+  drawSport() {
+    const { ctx, width, height, displayedSpeed } = this;
+    const cx = width / 2;
+    const cy = height / 2;
+    const radius = Math.min(width, height) * 0.38;
+
+    // Glowing Speed Bar Accent
+    const activeAngle = this.getAngle(displayedSpeed);
+    const gradient = ctx.createLinearGradient(0, height, width, 0);
+    gradient.addColorStop(0, '#30d158');
+    gradient.addColorStop(0.6, '#ffd60a');
+    gradient.addColorStop(1, '#ff453a');
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0.75 * Math.PI, activeAngle);
+    ctx.lineWidth = 18;
+    ctx.strokeStyle = gradient;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 64px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy + 12);
+
+    ctx.font = 'bold 14px sans-serif';
+    ctx.fillStyle = '#ff453a';
+    ctx.fillText('SPORT', cx, cy + 38);
+  }
+}
+
+// --- 3. App Controller ---
+document.addEventListener('DOMContentLoaded', () => {
+  // Elements
+  const canvas = document.getElementById('speedometerCanvas');
+  const clockEl = document.getElementById('clock');
+  const maxSpeedEl = document.getElementById('max-speed');
+  const tripDistanceEl = document.getElementById('trip-distance');
+  const roadNameEl = document.getElementById('road-name');
+  const hudBtn = document.getElementById('hud-toggle');
+  
+  // State
+  let maxSpeedKmh = 0;
+  let totalDistanceKm = 0;
+  let lastCoords = null;
+
+  // Initialize Canvas Renderer
+  const renderer = new SpeedometerRenderer(canvas);
+
+  // Clock Update
+  setInterval(() => {
+    const now = new Date();
+    clockEl.textContent = now.toTimeString().split(' ')[0];
+  }, 1000);
+
+  // HUD Mirror Mode Toggle
+  hudBtn.addEventListener('click', () => {
+    document.body.classList.toggle('hud-mode');
+    hudBtn.classList.toggle('active');
+  });
+
+  // Screen Wake Lock API
+  if ('wakeLock' in navigator) {
+    navigator.wakeLock.request('screen').catch((err) => console.log('Wake Lock Error:', err));
+  }
+
+  // Geolocation Observer
+  if ('geolocation' in navigator) {
+    navigator.geolocation.watchPosition(
+      (pos) => {
+        const speedMps = pos.coords.speed;
+        renderer.updateGpsSpeed(speedMps);
+
+        if (speedMps !== null && speedMps > 0) {
+          const currentKmh = speedMps * 3.6;
+          
+          // Track Max Speed
+          if (currentKmh > maxSpeedKmh) {
+            maxSpeedKmh = currentKmh;
+            maxSpeedEl.textContent = Math.round(maxSpeedKmh);
+          }
+
+          // Distance calculation (Haversine formula)
+          if (lastCoords) {
+            const dist = calcDistanceKm(
+              lastCoords.latitude,
+              lastCoords.longitude,
+              pos.coords.latitude,
+              pos.coords.longitude
+            );
+            totalDistanceKm += dist;
+            tripDistanceEl.textContent = totalDistanceKm.toFixed(1);
+          }
+          lastCoords = pos.coords;
+
+          // Reverse Geocoding via Nominatim OpenStreetMap API
+          fetchRoadName(pos.coords.latitude, pos.coords.longitude);
         }
-    }
+      },
+      (err) => console.error('GPS Error:', err),
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+    );
+  }
 
-    /* ──────────────────────────
-       Render loop
-    ────────────────────────── */
-    function frame() {
-        // smooth lerp toward raw value
-        disp += (raw - disp) * 0.12;
-        if (Math.abs(disp - raw) < 0.5) disp = raw;
-
-        const v = Math.round(disp);
-        elSpd.textContent = v;
-
-        // bar position
-        const pct = Math.min(v / 160 * 100, 100);
-        elFill.style.width = pct + '%';
-        elDot.style.left   = pct + '%';
-
-        // yellow glow intensity grows with speed
-        const glow = Math.min(0.35 + pct / 100 * 0.65, 1);
-        elFill.style.boxShadow = `0 0 ${8 + pct * 0.12}px rgba(255,204,0,${glow})`;
-        elDot.style.boxShadow  =
-            `0 0 10px 3px rgba(255,204,0,${glow}),` +
-            `0 0 ${20 + pct * 0.1}px ${4 + pct * 0.04}px rgba(255,204,0,${glow * 0.45})`;
-
-        // speed number colour ramp
-        const c = rampColour(v);
-        elSpd.style.color      = c.css;
-        elSpd.style.textShadow =
-            `0 0 18px ${c.css}55, 0 0 50px ${c.css}18`;
-
-        requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-
-    /* ──────────────────────────
-       Controls
-    ────────────────────────── */
-    bStart.addEventListener('click', () => {
-        if (on) {
-            if (wid) navigator.geolocation.clearWatch(wid);
-            wid = null;
-            on  = false;
-            raw = 0;
-            bStart.textContent = 'Start';
-            bStart.classList.add('go');
-            releaseLock();
-        } else {
-            if (!navigator.geolocation) {
-                flash('NO GPS');
-                return;
-            }
-            elRoad.textContent = 'Scanning GPS\u2026';
-            elRoad.classList.add('scan');
-            wid = navigator.geolocation.watchPosition(onPosition, onError, {
-                enableHighAccuracy: true,
-                maximumAge: 1000,
-                timeout: 15000
-            });
-            on = true;
-            bStart.textContent = 'Stop';
-            bStart.classList.remove('go');
-            acquireLock();
-        }
-    });
-
-    bReset.addEventListener('click', () => {
-        mx  = 0;
-        dst = 0;
-        elMax.textContent = '0';
-        elDst.textContent = '0.0';
-        flash('RESET');
-    });
-
-    /* ──────────────────────────
-       Mirror mode (windshield reflection)
-    ────────────────────────── */
-    function setMirror(state) {
-        elMirrorWrap.classList.toggle('mirrored', state);
-        bMirror.classList.toggle('go', state);
-        try { localStorage.setItem('hud-mirror', state ? '1' : '0'); } catch (_) {}
-    }
-
-    bMirror.addEventListener('click', () => {
-        setMirror(!elMirrorWrap.classList.contains('mirrored'));
-    });
+  // Reverse Geocode Handler (Debounced)
+  let lastGeocodeTime = 0;
+  async function fetchRoadName(lat, lon) {
+    const now = Date.now();
+    if (now - lastGeocodeTime < 10000) return; // Limit requests to once per 10s
+    lastGeocodeTime = now;
 
     try {
-        if (localStorage.getItem('hud-mirror') === '1') setMirror(true);
-    } catch (_) {}
-
-    /* ──────────────────────────
-       Hide loader once fonts ready
-    ────────────────────────── */
-    document.fonts.ready.then(() => {
-        setTimeout(() => {
-            if (!fix) elLoader.classList.add('out');
-        }, 2000);
-    });
-
-    /* ──────────────────────────
-       Register service worker
-    ────────────────────────── */
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => {});
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+      const data = await res.json();
+      if (data && data.address) {
+        roadNameEl.textContent = data.address.road || data.address.suburb || 'Unknown Road';
+      }
+    } catch {
+      roadNameEl.textContent = 'Drive Safe';
     }
+  }
 
-})();
+  // Distance Utility
+  function calcDistanceKm(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+  }
+
+  // Theme Switching Navigation Event Handlers
+  const themeBtns = document.querySelectorAll('.theme-btn:not(#btn-gforce-toggle)');
+  themeBtns.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      themeBtns.forEach((b) => b.classList.remove('active'));
+      e.target.classList.add('active');
+
+      const themeMap = {
+        'btn-analog': 'analog',
+        'btn-minimalist': 'minimalist',
+        'btn-sport': 'sport'
+      };
+      renderer.setTheme(themeMap[e.target.id]);
+    });
+  });
+
+  // G-Force Panel Handler
+  const gTracker = new GForceTracker((data) => {
+    document.getElementById('g-x').textContent = data.x;
+    document.getElementById('g-y').textContent = data.y;
+    document.getElementById('g-total').textContent = `${data.total} G`;
+  });
+
+  const gforceBtn = document.getElementById('btn-gforce-toggle');
+  gforceBtn.addEventListener('click', () => {
+    const panel = document.getElementById('gforce-panel');
+    panel.classList.toggle('hidden');
+    gforceBtn.classList.toggle('active');
+
+    if (!panel.classList.contains('hidden')) {
+      gTracker.requestPermissionAndStart();
+    }
+  });
+
+  // Register PWA Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch((err) => console.log('SW registration failed:', err));
+  }
+});
