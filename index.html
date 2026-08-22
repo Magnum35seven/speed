@@ -33,35 +33,27 @@
       <canvas id="speedometerCanvas"></canvas>
     </main>
 
-    <!-- Telemetry Footer Details -->
+    <!-- Telemetry Footer: Dedicated Location Display -->
     <footer class="telemetry-bar">
-      <div class="telemetry-item">
-        <span class="label">MAX SPEED</span>
-        <span class="value"><strong id="max-speed">0</strong> <small>KM/H</small></span>
-      </div>
       <div class="telemetry-item location-item">
-        <span class="label">LOCATION</span>
+        <span class="label">CURRENT LOCATION</span>
         <span id="road-name" class="value location-primary truncate">Locating...</span>
         <span id="suburb-name" class="sub-label location-secondary truncate">---</span>
       </div>
-      <div class="telemetry-item">
-        <span class="label">DISTANCE</span>
-        <span class="value"><strong id="trip-distance">0.0</strong> <small>KM</small></span>
-      </div>
     </footer>
 
-    <!-- G-Force Panel -->
+    <!-- G-Force & Trip Stats Panel -->
     <section id="gforce-panel" class="gforce-panel hidden">
       <div class="g-stat">
-        <span class="g-label">LAT (X)</span>
-        <span id="g-x" class="g-value">0.00</span>
+        <span class="g-label">MAX SPEED</span>
+        <span class="g-value"><strong id="max-speed">0</strong> <small>KM/H</small></span>
       </div>
       <div class="g-stat">
-        <span class="g-label">LONG (Y)</span>
-        <span id="g-y" class="g-value">0.00</span>
+        <span class="g-label">DISTANCE</span>
+        <span class="g-value"><strong id="trip-distance">0.0</strong> <small>KM</small></span>
       </div>
       <div class="g-stat">
-        <span class="g-label">TOTAL FORCE</span>
+        <span class="g-label">G-FORCE</span>
         <span id="g-total" class="g-value highlight">0.00 G</span>
       </div>
     </section>
