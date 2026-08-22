@@ -88,6 +88,7 @@ body.hud-mode .telemetry-bar {
   color: #000000;
 }
 
+/* Gauge Wrapper & Dynamic Speed Brackets Border */
 .gauge-wrapper {
   flex: 1;
   display: flex;
@@ -96,6 +97,27 @@ body.hud-mode .telemetry-bar {
   position: relative;
   width: 100%;
   max-height: 55vh;
+  border-radius: 24px;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  border: 4px solid transparent;
+}
+
+/* Speed Tier 1: 0 - 60 km/h (Dark Default) */
+.gauge-wrapper.border-normal {
+  border-color: #2c2c2e;
+  box-shadow: 0 0 0px transparent;
+}
+
+/* Speed Tier 2: 61 - 80 km/h (Vivid Green) */
+.gauge-wrapper.border-moderate {
+  border-color: #30d158;
+  box-shadow: 0 0 25px rgba(48, 209, 88, 0.3);
+}
+
+/* Speed Tier 3: 81+ km/h (Warning Red) */
+.gauge-wrapper.border-warning {
+  border-color: #ff453a;
+  box-shadow: 0 0 35px rgba(255, 69, 58, 0.5);
 }
 
 #speedometerCanvas {
