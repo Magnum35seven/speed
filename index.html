@@ -1,64 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>HUD Speedometer</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0a0a0c">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUD Speed</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
 </head>
-<body id="app-body" class="speed-tier-normal">
-  <div class="app-container">
-    <!-- Top Bar: Clock & Controls -->
-    <header class="top-bar">
-      <div class="top-spacer"></div>
-      <div id="clock" class="clock-display">00:00</div>
-      <div class="top-controls">
-        <button id="reset-btn" class="icon-btn danger" title="Reset Max Speed & Distance">🔄 Reset</button>
-        <button id="hud-toggle" class="icon-btn" title="Mirror Display (HUD Mode)">🪞 HUD</button>
-      </div>
+<body>
+    <header class="app-header">
+        <div id="clock">00:00</div>
+        <!-- Speed Unit Toggle Button -->
+        <button id="unit-toggle" class="unit-toggle-btn" aria-label="Toggle speed unit">km/h</button>
     </header>
 
-    <!-- Theme Switcher Navigation -->
-    <nav class="theme-bar">
-      <button id="btn-analog" class="theme-btn active">Analog</button>
-      <button id="btn-minimalist" class="theme-btn">Minimalist</button>
-      <button id="btn-sport" class="theme-btn">Sport</button>
-      <button id="btn-gforce-toggle" class="theme-btn accent">Enable G-Force</button>
-    </nav>
-
-    <!-- Main Gauge Container -->
-    <main id="gauge-frame" class="gauge-wrapper border-normal">
-      <canvas id="speedometerCanvas"></canvas>
+    <main class="hud-container">
+        <div class="speed-display">
+            <span id="speed-value">0</span>
+            <span id="unit-label" class="unit-label">km/h</span>
+        </div>
+        <div class="speed-bar-container">
+            <div id="speed-bar" class="speed-bar"></div>
+        </div>
+        <div id="road-name" class="road-name">Locating...</div>
     </main>
 
-    <!-- Telemetry Footer: Dedicated Location Display -->
-    <footer class="telemetry-bar">
-      <div class="telemetry-item location-item">
-        <span class="label">CURRENT LOCATION</span>
-        <span id="road-name" class="value location-primary truncate">Locating...</span>
-        <span id="suburb-name" class="sub-label location-secondary truncate">---</span>
-      </div>
+    <footer class="telemetry-footer">
+        <div class="stat-item">
+            <span class="stat-label">MAX</span>
+            <span id="max-speed">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">DIST</span>
+            <span id="distance">0.0</span>
+        </div>
     </footer>
 
-    <!-- G-Force & Trip Stats Panel -->
-    <section id="gforce-panel" class="gforce-panel hidden">
-      <div class="g-stat">
-        <span class="g-label">MAX SPEED</span>
-        <span class="g-value"><strong id="max-speed">0</strong> <small>KM/H</small></span>
-      </div>
-      <div class="g-stat">
-        <span class="g-label">DISTANCE</span>
-        <span class="g-value"><strong id="trip-distance">0.0</strong> <small>KM</small></span>
-      </div>
-      <div class="g-stat">
-        <span class="g-label">G-FORCE</span>
-        <span id="g-total" class="g-value highlight">0.00 G</span>
-      </div>
-    </section>
-  </div>
-
-  <script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
