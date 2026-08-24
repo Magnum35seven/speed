@@ -59,9 +59,10 @@ class SpeedometerRenderer {
     
     this.targetSpeed = 0;    
     this.displayedSpeed = 0;  
-    this.maxSpeed = 160;     
+    this.maxSpeedKmh = 160;     
     this.smoothingFactor = 0.15; 
     this.theme = 'analog';   
+    this.unitSystem = localStorage.getItem('speedUnit') || 'kmh'; // 'kmh' or 'mph'
 
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -88,19 +89,33 @@ class SpeedometerRenderer {
     this.theme = themeName;
   }
 
+  convertSpeed(speedKmh) {
+    return this.unitSystem === 'mph' ? speedKmh * 0.621371 : speedKmh;
+  }
+
+  getMaxSpeed() {
+    return this.unitSystem === 'kmh' ? 160 : 100;
+  }
+
   getSpeedColor(speed) {
-    if (speed > 80) return '#ff453a'; // Warning Red
-    if (speed > 60) return '#30d158'; // Moderate Green
+    const redThreshold = this.unitSystem === 'kmh' ? 80 : 50;
+    const yellowThreshold = this.unitSystem === 'kmh' ? 60 : 37;
+    
+    if (speed > redThreshold) return '#ff453a'; // Warning Red
+    if (speed > yellowThreshold) return '#30d158'; // Moderate Green
     return '#0a84ff';                // Standard Blue
   }
 
   updateThemeBracket(speed) {
     if (!this.frameElement) return;
 
+    const redThreshold = this.unitSystem === 'kmh' ? 80 : 50;
+    const yellowThreshold = this.unitSystem === 'kmh' ? 60 : 37;
+
     this.frameElement.classList.remove('border-normal', 'border-moderate', 'border-warning');
-    if (speed > 80) {
+    if (speed > redThreshold) {
       this.frameElement.classList.add('border-warning');
-    } else if (speed > 60) {
+    } else if (speed > yellowThreshold) {
       this.frameElement.classList.add('border-moderate');
     } else {
       this.frameElement.classList.add('border-normal');
@@ -131,7 +146,8 @@ class SpeedometerRenderer {
   }
 
   getAngle(speed) {
-    const pct = Math.min(Math.max(speed, 0), this.maxSpeed) / this.maxSpeed;
+    const maxSpeed = this.getMaxSpeed();
+    const pct = Math.min(Math.max(speed, 0), maxSpeed) / maxSpeed;
     return (0.75 + pct * 1.5) * Math.PI;
   }
 
@@ -141,7 +157,9 @@ class SpeedometerRenderer {
     const cx = width / 2;
     const cy = height / 2;
     const radius = Math.min(width, height) * 0.38;
+    const maxSpeed = this.getMaxSpeed();
     const activeColor = this.getSpeedColor(displayedSpeed);
+    const unitLabel = this.unitSystem === 'mph' ? 'MPH' : 'KM/H';
 
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0.75 * Math.PI, 2.25 * Math.PI);
@@ -149,7 +167,8 @@ class SpeedometerRenderer {
     ctx.strokeStyle = '#2c2c2e';
     ctx.stroke();
 
-    for (let i = 0; i <= this.maxSpeed; i += 20) {
+    const increment = this.unitSystem === 'kmh' ? 20 : 12;
+    for (let i = 0; i <= maxSpeed; i += increment) {
       const angle = this.getAngle(i);
       const x1 = cx + Math.cos(angle) * (radius - 12);
       const y1 = cy + Math.sin(angle) * (radius - 12);
@@ -192,7 +211,7 @@ class SpeedometerRenderer {
     ctx.fillText(`${Math.round(displayedSpeed)}`, cx, cy + radius * 0.55);
     ctx.font = '12px sans-serif';
     ctx.fillStyle = '#8e8e93';
-    ctx.fillText('KM/H', cx, cy + radius * 0.55 + 18);
+    ctx.fillText(unitLabel, cx, cy + radius * 0.55 + 18);
   }
 
   // --- Theme 2: Minimalist ---
@@ -201,6 +220,7 @@ class SpeedometerRenderer {
     const cx = width / 2;
     const cy = height / 2;
     const activeColor = this.getSpeedColor(displayedSpeed);
+    const unitLabel = this.unitSystem === 'mph' ? 'MPH' : 'KM/H';
 
     ctx.fillStyle = activeColor;
     ctx.font = '900 130px monospace';
@@ -210,7 +230,7 @@ class SpeedometerRenderer {
 
     ctx.fillStyle = '#8e8e93';
     ctx.font = 'bold 18px sans-serif';
-    ctx.fillText('KM/H', cx, cy + 70);
+    ctx.fillText(unitLabel, cx, cy + 70);
   }
 
   // --- Theme 3: Sport Telemetry ---
@@ -219,11 +239,13 @@ class SpeedometerRenderer {
     const cx = width / 2;
     const cy = height / 2;
     const radius = Math.min(width, height) * 0.38;
+    const maxSpeed = this.getMaxSpeed();
     const activeColor = this.getSpeedColor(displayedSpeed);
+    const unitLabel = this.unitSystem === 'mph' ? 'MPH' : 'KM/H';
 
     const startAngle = 0.75 * Math.PI;
     const maxAngle = 2.25 * Math.PI;
-    const pct = Math.min(Math.max(displayedSpeed, 0), this.maxSpeed) / this.maxSpeed;
+    const pct = Math.min(Math.max(displayedSpeed, 0), maxSpeed) / maxSpeed;
     const currentAngle = startAngle + pct * (maxAngle - startAngle);
 
     // Track Background
@@ -252,7 +274,7 @@ class SpeedometerRenderer {
 
     ctx.font = 'bold 16px sans-serif';
     ctx.fillStyle = activeColor;
-    ctx.fillText('SPORT KM/H', cx, cy + 60);
+    ctx.fillText(`SPORT ${unitLabel}`, cx, cy + 60);
   }
 }
 
@@ -262,17 +284,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const frameElement = document.getElementById('gauge-frame');
   const clockEl = document.getElementById('clock');
   const maxSpeedEl = document.getElementById('max-speed');
+  const maxSpeedUnitEl = document.getElementById('max-speed-unit');
   const tripDistanceEl = document.getElementById('trip-distance');
+  const tripDistanceUnitEl = document.getElementById('trip-distance-unit');
   const roadNameEl = document.getElementById('road-name');
   const suburbNameEl = document.getElementById('suburb-name');
   const hudBtn = document.getElementById('hud-toggle');
   const resetBtn = document.getElementById('reset-btn');
+  const unitBtn = document.getElementById('btn-unit-toggle');
   
   let maxSpeedKmh = 0;
   let totalDistanceKm = 0;
   let lastCoords = null;
 
   const renderer = new SpeedometerRenderer(canvas, frameElement);
+
+  // Update unit button text and panel labels based on current unit system
+  const updateUnitDisplay = () => {
+    if (renderer.unitSystem === 'kmh') {
+      unitBtn.textContent = '📏 Switch to MPH';
+      maxSpeedUnitEl.textContent = 'KM/H';
+      tripDistanceUnitEl.textContent = 'KM';
+    } else {
+      unitBtn.textContent = '📏 Switch to KM/H';
+      maxSpeedUnitEl.textContent = 'MPH';
+      tripDistanceUnitEl.textContent = 'MI';
+    }
+  };
+  updateUnitDisplay();
 
   const updateClock = () => {
     const now = new Date();
@@ -295,6 +334,13 @@ document.addEventListener('DOMContentLoaded', () => {
     tripDistanceEl.textContent = '0.0';
   });
 
+  unitBtn.addEventListener('click', () => {
+    renderer.unitSystem = renderer.unitSystem === 'kmh' ? 'mph' : 'kmh';
+    localStorage.setItem('speedUnit', renderer.unitSystem);
+    updateUnitDisplay();
+    unitBtn.classList.toggle('active');
+  });
+
   if ('wakeLock' in navigator) {
     navigator.wakeLock.request('screen').catch((err) => console.log('Wake Lock Error:', err));
   }
@@ -314,7 +360,8 @@ document.addEventListener('DOMContentLoaded', () => {
           
           if (currentKmh > maxSpeedKmh) {
             maxSpeedKmh = currentKmh;
-            maxSpeedEl.textContent = Math.round(maxSpeedKmh);
+            const displaySpeed = renderer.convertSpeed(maxSpeedKmh);
+            maxSpeedEl.textContent = Math.round(displaySpeed);
           }
 
           if (lastCoords) {
@@ -325,7 +372,10 @@ document.addEventListener('DOMContentLoaded', () => {
               pos.coords.longitude
             );
             totalDistanceKm += dist;
-            tripDistanceEl.textContent = totalDistanceKm.toFixed(1);
+            const displayDistance = renderer.unitSystem === 'mph' 
+              ? (totalDistanceKm * 0.621371).toFixed(1) 
+              : totalDistanceKm.toFixed(1);
+            tripDistanceEl.textContent = displayDistance;
           }
           lastCoords = pos.coords;
         }
@@ -364,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
   }
 
-  const themeBtns = document.querySelectorAll('.theme-btn:not(#btn-gforce-toggle)');
+  const themeBtns = document.querySelectorAll('.theme-btn:not(#btn-gforce-toggle):not(#btn-unit-toggle)');
   themeBtns.forEach((btn) => {
     btn.addEventListener('click', (e) => {
       themeBtns.forEach((b) => b.classList.remove('active'));
