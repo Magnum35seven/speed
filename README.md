@@ -38,11 +38,13 @@ a real HUD. No apps to install, no accounts, no paid APIs.
 1. Fork or clone this repo
 2. Go to **Settings → Pages**
 3. Set source to `main` branch, root `/`
-4. Visit `https://yourusername.github.io/hud-speed/`
+4. Visit `https://yourusername.github.io/speed/`
 
 ### Option 2 — Local
 
 ```bash
-git clone https://github.com/yourusername/hud-speed.git
-cd hud-speed
+git clone https://github.com/yourusername/speed.git
+cd speed
 npx serve .
+
+```
