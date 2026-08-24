@@ -3,38 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUD Speed</title>
+    <title>HUD Speedometer</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <header class="app-header">
         <div id="clock">00:00</div>
-        <!-- Speed Unit Toggle Button -->
-        <button id="unit-toggle" class="unit-toggle-btn" aria-label="Toggle speed unit">km/h</button>
+        <div class="header-controls">
+            <button id="unit-toggle" class="btn" aria-label="Toggle speed unit">KM/H</button>
+            <button id="hud-toggle" class="btn">🪞 HUD</button>
+            <button id="reset-btn" class="btn btn-danger">🔄 Reset</button>
+        </div>
     </header>
 
-    <main class="hud-container">
-        <div class="speed-display">
-            <span id="speed-value">0</span>
-            <span id="unit-label" class="unit-label">km/h</span>
-        </div>
-        <div class="speed-bar-container">
-            <div id="speed-bar" class="speed-bar"></div>
-        </div>
-        <div id="road-name" class="road-name">Locating...</div>
-    </main>
+    <div class="mode-selector">
+        <button class="mode-btn active" data-mode="analog">Analog</button>
+        <button class="mode-btn" data-mode="minimalist">Minimalist</button>
+        <button class="mode-btn" data-mode="sport">Sport</button>
+        <button id="gforce-toggle" class="mode-btn">Enable G-Force</button>
+    </div>
 
-    <footer class="telemetry-footer">
-        <div class="stat-item">
-            <span class="stat-label">MAX</span>
-            <span id="max-speed">0</span>
+    <main class="hud-container">
+        <div class="gauge-card">
+            <div class="speedometer-gauge">
+                <div class="ticks"></div>
+                <div class="needle" id="needle"></div>
+                <div class="gauge-center">
+                    <span id="speed-value">0</span>
+                    <span id="unit-label" class="unit-label">KM/H</span>
+                </div>
+            </div>
         </div>
-        <div class="stat-item">
-            <span class="stat-label">DIST</span>
-            <span id="distance">0.0</span>
+
+        <div class="location-card">
+            <span class="location-title">CURRENT LOCATION</span>
+            <div id="road-name" class="road-name">Locating...</div>
+            <div id="suburb-name" class="suburb-name"></div>
         </div>
-    </footer>
+    </main>
 
     <script src="app.js"></script>
 </body>
