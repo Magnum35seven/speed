@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hud-speed-v01';
+const CACHE_NAME = 'hud-speed-v02';
 
 // Relative paths resolve against the service worker's own scope,
 // so this works whether hosted at a domain root or a GitHub Pages
