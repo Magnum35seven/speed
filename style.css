@@ -5,17 +5,17 @@
 }
 
 body {
-    background-color: #000000;
+    background-color: #0c0d0f;
     color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    padding: 20px;
-    overflow: hidden;
+    padding: 16px;
+    gap: 16px;
 }
 
+/* Header */
 .app-header {
     display: flex;
     justify-content: space-between;
@@ -24,8 +24,10 @@ body {
 }
 
 #clock {
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: #ff9500;
+    line-height: 1;
 }
 
 .header-controls {
@@ -34,77 +36,167 @@ body {
 }
 
 .btn {
-    background-color: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #fff;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    cursor: pointer;
-}
-
-.mode-selector {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-}
-
-.mode-btn {
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    color: #aaa;
-    padding: 4px 10px;
-    border-radius: 4px;
-    font-size: 0.8rem;
-    cursor: pointer;
-}
-
-.mode-btn.active {
-    border-color: #fff;
-    color: #fff;
-}
-
-.hud-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-grow: 1;
+    background-color: #1c1c1e;
+    border: 1px solid #2c2c2e;
+    border-radius: 12px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-width: 58px;
+    min-height: 58px;
 }
 
-.speed-display {
+.btn .icon {
+    font-size: 1.1rem;
+    margin-bottom: 2px;
+}
+
+.btn-reset {
+    color: #ff453a;
+    border-color: rgba(255, 69, 58, 0.2);
+}
+
+.btn-hud {
+    color: #0a84ff;
+    border-color: rgba(10, 132, 255, 0.2);
+}
+
+.btn-unit {
+    color: #30d158;
+    border-color: rgba(48, 209, 88, 0.2);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+/* Mode Selector Bar */
+.mode-selector {
     display: flex;
-    align-items: baseline;
+    gap: 8px;
+    width: 100%;
+}
+
+.mode-btn {
+    flex: 1;
+    background-color: #1c1c1e;
+    border: 1px solid #2c2c2e;
+    color: #8e8e93;
+    padding: 12px 4px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+.mode-btn.active {
+    background-color: #3a3a3c;
+    color: #ffffff;
+    border-color: #48484a;
+}
+
+.gforce-btn {
+    border-color: #30d158;
+    color: #30d158;
+    background-color: transparent;
+    line-height: 1.1;
+}
+
+/* Container & Cards */
+.hud-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+}
+
+.card {
+    background-color: #141416;
+    border: 1px solid #242426;
+    border-radius: 24px;
+    width: 100%;
+}
+
+/* Gauge Area */
+.gauge-card {
+    padding: 20px 10px;
+    display: flex;
     justify-content: center;
+    align-items: center;
+}
+
+.analog-gauge {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+    aspect-ratio: 1;
+}
+
+.gauge-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.tick-label {
+    fill: #8e8e93;
+    font-size: 8px;
+    font-weight: 600;
+    text-anchor: middle;
+}
+
+.gauge-center-text {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 #speed-value {
-    font-size: 10rem;
+    font-size: 3.8rem;
     font-weight: 800;
     line-height: 1;
 }
 
 .unit-label {
-    font-size: 2rem;
-    font-weight: 600;
-    color: #777777;
-    margin-left: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #8e8e93;
+    letter-spacing: 1px;
+    margin-top: 4px;
 }
 
+/* Location Card */
 .location-card {
-    margin-top: 20px;
+    padding: 20px;
     text-align: center;
 }
 
 .location-title {
     font-size: 0.75rem;
-    color: #666;
-    letter-spacing: 1px;
+    font-weight: 600;
+    color: #636366;
+    letter-spacing: 1.2px;
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .road-name {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.suburb-name {
     font-size: 1.2rem;
-    color: #aaa;
+    font-weight: 700;
+    color: #30d158;
+    margin-top: 2px;
 }
