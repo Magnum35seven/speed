@@ -1,187 +1,92 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HUD Speedometer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-left">
+            <button id="reset-btn" class="btn btn-reset">
+                <span class="icon">🔄</span>
+                <span>Reset</span>
+            </button>
+        </div>
 
-body {
-    background-color: #0c0d0f;
-    color: #ffffff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    gap: 16px;
-}
+        <div id="clock">00:00</div>
 
-/* App Header */
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        <div class="header-right">
+            <button id="hud-toggle" class="btn btn-hud">
+                <span class="icon">🪞</span>
+                <span>HUD</span>
+            </button>
+            <button id="unit-toggle" class="btn btn-unit">KM/H</button>
+        </div>
+    </header>
 
-#clock {
-    font-size: 3.2rem;
-    font-weight: 700;
-    color: #ff9500;
-    line-height: 1;
-}
+    <div class="mode-selector">
+        <button class="mode-btn active" data-mode="analog">Analog</button>
+        <button class="mode-btn" data-mode="minimalist">Minimalist</button>
+        <button class="mode-btn" data-mode="sport">Sport</button>
+    </div>
 
-.header-controls {
-    display: flex;
-    gap: 8px;
-}
+    <main class="hud-container">
+        <!-- Analog View -->
+        <div id="analog-view" class="card gauge-card mode-view active">
+            <div class="gauge-wrapper">
+                <svg class="gauge-svg" viewBox="0 0 200 200">
+                    <path class="gauge-track" d="M 30 150 A 70 70 0 1 1 170 150" fill="none" stroke="#252629" stroke-width="8" stroke-linecap="round"/>
+                    
+                    <text x="32" y="152" class="tick">0</text>
+                    <text x="35" y="100" class="tick">20</text>
+                    <text x="58" y="58" class="tick">40</text>
+                    <text x="92" y="38" class="tick">60</text>
+                    <text x="100" y="30" class="tick">80</text>
+                    <text x="110" y="38" class="tick">100</text>
+                    <text x="142" y="58" class="tick">120</text>
+                    <text x="165" y="100" class="tick">140</text>
+                    <text x="168" y="152" class="tick">160</text>
 
-.btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background-color: #1a1b1e;
-    border: 1px solid #28292d;
-    border-radius: 12px;
-    padding: 8px 12px;
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    min-width: 60px;
-    min-height: 56px;
-}
+                    <line id="needle" x1="100" y1="100" x2="50" y2="150" stroke="#007aff" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="100" cy="100" r="6" fill="#007aff"/>
+                </svg>
 
-.btn .icon {
-    font-size: 1.1rem;
-    margin-bottom: 2px;
-}
+                <div class="speed-readout">
+                    <span class="speed-val">0</span>
+                    <span class="unit-lbl">KM/H</span>
+                </div>
+            </div>
+        </div>
 
-.btn-reset { color: #ff3b30; }
-.btn-hud { color: #007aff; }
-.btn-unit { color: #fff; font-size: 0.85rem; font-weight: 700; }
+        <!-- Minimalist View -->
+        <div id="minimalist-view" class="card minimalist-card mode-view">
+            <div class="minimalist-readout">
+                <span class="speed-val mega-speed">0</span>
+                <span class="unit-lbl">KM/H</span>
+            </div>
+        </div>
 
-/* Modes Bar */
-.mode-selector {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-}
+        <!-- Sport View -->
+        <div id="sport-view" class="card sport-card mode-view">
+            <div class="sport-readout">
+                <span class="speed-val">0</span>
+                <span class="unit-lbl">KM/H</span>
+            </div>
+            <div class="sport-bar-container">
+                <div id="sport-bar" class="sport-bar"></div>
+            </div>
+        </div>
 
-.mode-btn {
-    flex: 1;
-    background-color: #1a1b1e;
-    border: 1px solid #28292d;
-    color: #8e8e93;
-    padding: 12px 4px;
-    border-radius: 16px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: center;
-}
+        <!-- Location Box -->
+        <div class="card location-card">
+            <span class="location-title">CURRENT LOCATION</span>
+            <div id="road-name" class="road-name">Locating...</div>
+            <div id="suburb-name" class="suburb-name"></div>
+        </div>
+    </main>
 
-.mode-btn.active {
-    background-color: #323338;
-    color: #ffffff;
-}
-
-.gforce-btn {
-    border-color: #34c759;
-    color: #34c759;
-    background: transparent;
-    line-height: 1.1;
-}
-
-/* Layout Containers */
-.hud-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    flex: 1;
-}
-
-.card {
-    background-color: #131416;
-    border: 1px solid #232427;
-    border-radius: 24px;
-    width: 100%;
-}
-
-/* Gauge */
-.gauge-card {
-    padding: 24px 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.gauge-wrapper {
-    position: relative;
-    width: 100%;
-    max-width: 300px;
-    aspect-ratio: 1;
-}
-
-.gauge-svg {
-    width: 100%;
-    height: 100%;
-}
-
-.tick {
-    fill: #8e8e93;
-    font-size: 8px;
-    font-weight: 600;
-    text-anchor: middle;
-}
-
-.speed-readout {
-    position: absolute;
-    top: 60%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-#speed-value {
-    font-size: 3.8rem;
-    font-weight: 800;
-    line-height: 1;
-}
-
-.unit-label {
-    font-size: 0.8rem;
-    font-weight: 700;
-    color: #8e8e93;
-    margin-top: 4px;
-    letter-spacing: 1px;
-}
-
-/* Location Box */
-.location-card {
-    padding: 20px;
-    text-align: center;
-}
-
-.location-title {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #636366;
-    letter-spacing: 1.2px;
-    display: block;
-    margin-bottom: 6px;
-}
-
-.road-name {
-    font-size: 1.8rem;
-    font-weight: 800;
-    color: #ffffff;
-}
-
-.suburb-name {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #34c759;
-    margin-top: 2px;
-}
+    <script src="app.js"></script>
+</body>
+</html>
