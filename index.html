@@ -10,16 +10,14 @@
 </head>
 <body>
     <header class="app-header">
-        <div class="header-left">
+        <div class="clock-row">
+            <div id="clock">00:00</div>
+        </div>
+        <div class="controls-row">
             <button id="reset-btn" class="btn btn-reset">
                 <span class="icon">🔄</span>
                 <span>Reset</span>
             </button>
-        </div>
-
-        <div id="clock">00:00</div>
-
-        <div class="header-right">
             <button id="hud-toggle" class="btn btn-hud">
                 <span class="icon">🪞</span>
                 <span>HUD</span>
@@ -130,12 +128,19 @@
 
         <!-- Sport View -->
         <div id="sport-view" class="card sport-card mode-view">
-            <div class="sport-readout">
-                <span class="speed-val">0</span>
-                <span class="unit-lbl">KM/H</span>
-            </div>
-            <div class="sport-bar-container">
-                <div id="sport-bar" class="sport-bar"></div>
+            <div class="sport-gauge-wrapper">
+                <img src="speedo-face.png" alt="" class="sport-gauge-img">
+                <svg class="sport-needle-svg" viewBox="0 0 1542 898" preserveAspectRatio="xMidYMid meet">
+                    <!-- needle: drawn pointing straight up at rest, rotated by JS around the dial's pivot -->
+                    <polygon id="sport-needle" points="766,225 754,748 766,772 778,748" class="sport-needle"/>
+                    <circle cx="766" cy="746" r="32" class="sport-needle-hub"/>
+                    <circle cx="766" cy="746" r="13" class="sport-needle-hub-inner"/>
+                </svg>
+
+                <div class="sport-readout">
+                    <span class="speed-val">0</span>
+                    <span class="unit-lbl">KM/H</span>
+                </div>
             </div>
         </div>
 
