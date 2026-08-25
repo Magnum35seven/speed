@@ -117,25 +117,23 @@ main.hud-container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 16px;
-    overflow-y: auto;
-    align-items: center;
-    justify-content: flex-start;
+    gap: 0;
+    padding: 0;
+    overflow: hidden;
     width: 100%;
+    height: 100%;
     background-color: #000000;
-    min-height: 0;
 }
 
 /* Cards */
 .card {
     width: 100%;
-    max-width: 400px;
+    height: 100%;
     background-color: #1a1b1e;
-    border: 1px solid #252629;
-    border-radius: 12px;
+    border: none;
+    border-radius: 0;
     display: flex;
-    padding: 20px;
+    padding: 0;
     flex-shrink: 0;
 }
 
@@ -143,8 +141,9 @@ main.hud-container {
 .gauge-card {
     justify-content: center;
     align-items: center;
-    height: 320px;
-    width: 100%;
+    flex-direction: column;
+    gap: 20px;
+    padding: 40px 20px;
 }
 
 .gauge-wrapper {
@@ -152,19 +151,21 @@ main.hud-container {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 16px;
+    gap: 20px;
     width: 100%;
-    height: 100%;
+    height: auto;
 }
 
 .gauge-svg {
-    width: 240px;
-    height: 240px;
+    width: 280px;
+    height: 280px;
+    max-width: 100%;
 }
 
 .gauge-svg .tick {
-    font-size: 12px;
+    font-size: 14px;
     fill: #8a8c91;
+    font-weight: 600;
 }
 
 .gauge-svg .gauge-track {
@@ -183,12 +184,12 @@ main.hud-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
     text-align: center;
 }
 
 .speed-val {
-    font-size: 3rem;
+    font-size: 3.5rem;
     font-weight: 900;
     font-family: 'Monaco', 'Courier New', monospace;
     line-height: 1;
@@ -198,10 +199,10 @@ main.hud-container {
 }
 
 .unit-lbl {
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: #8a8c91;
-    font-weight: 600;
-    letter-spacing: 0.1em;
+    font-weight: 700;
+    letter-spacing: 0.15em;
 }
 
 /* Minimalist Mode View */
@@ -209,70 +210,84 @@ main.hud-container {
     padding: 40px 20px;
     justify-content: center;
     align-items: center;
-    height: auto;
-    min-height: 280px;
+    background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
 }
 
 .minimalist-readout {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 16px;
+    text-align: center;
 }
 
 .mega-speed {
-    font-size: 8rem;
+    font-size: 12rem;
     font-weight: 900;
-    line-height: 0.95;
+    line-height: 0.9;
     font-family: 'Monaco', 'Courier New', monospace;
     color: #ffffff;
+    text-shadow: 0 0 40px rgba(0, 122, 255, 0.5);
 }
 
 /* Sport Mode View */
 .sport-card {
-    padding: 40px 24px;
+    padding: 60px 40px;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    justify-content: center;
+    gap: 40px;
+    background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
 }
 
 .sport-readout {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
+    order: 2;
+}
+
+.sport-readout .speed-val {
+    font-size: 5rem;
 }
 
 .sport-bar-container {
     width: 100%;
-    height: 24px;
+    max-width: 500px;
+    height: 40px;
     background-color: #232427;
-    border-radius: 12px;
+    border-radius: 20px;
     overflow: hidden;
-    padding: 2px;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    padding: 3px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    order: 1;
 }
 
 .sport-bar {
     height: 100%;
     width: 0%;
-    border-radius: 10px;
+    border-radius: 18px;
     background: linear-gradient(90deg, #007aff, #00c6ff);
     transition: width 0.3s ease, background 0.4s ease;
-    box-shadow: 0 0 8px rgba(0, 122, 255, 0.5);
+    box-shadow: 0 0 12px rgba(0, 122, 255, 0.8);
 }
 
 /* Location Card */
 .location-card {
     width: 100%;
-    max-width: 400px;
+    height: auto;
     flex-direction: column;
     gap: 8px;
-    padding: 16px;
+    padding: 20px;
+    background-color: #1a1b1e;
+    border-top: 1px solid #252629;
+    margin-top: auto;
+    flex-shrink: 0;
 }
 
 .location-title {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     color: #8a8c91;
     font-weight: 700;
     letter-spacing: 0.15em;
@@ -280,7 +295,7 @@ main.hud-container {
 }
 
 .road-name {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
     font-weight: 600;
     color: #ffffff;
 }
@@ -301,20 +316,7 @@ main.hud-container {
 
 /* Scrollbar Styling */
 main.hud-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-main.hud-container::-webkit-scrollbar-track {
-    background: #000000;
-}
-
-main.hud-container::-webkit-scrollbar-thumb {
-    background: #252629;
-    border-radius: 3px;
-}
-
-main.hud-container::-webkit-scrollbar-thumb:hover {
-    background: #3a3d42;
+    width: 0;
 }
 
 /* Mobile Responsive */
@@ -334,26 +336,12 @@ main.hud-container::-webkit-scrollbar-thumb:hover {
 
     .mode-btn {
         padding: 5px 12px;
-        font-size: 0.8rem;
-    }
-
-    main.hud-container {
-        padding: 12px;
-        gap: 12px;
-    }
-
-    .card {
-        max-width: 100%;
-        padding: 16px;
-    }
-
-    .gauge-card {
-        height: 280px;
+        font-size: 0.75rem;
     }
 
     .gauge-svg {
-        width: 180px;
-        height: 180px;
+        width: 200px;
+        height: 200px;
     }
 
     .speed-val {
@@ -361,12 +349,30 @@ main.hud-container::-webkit-scrollbar-thumb:hover {
     }
 
     .mega-speed {
-        font-size: 5rem;
+        font-size: 8rem;
+    }
+
+    .sport-card {
+        padding: 40px 20px;
+        gap: 30px;
+    }
+
+    .sport-readout .speed-val {
+        font-size: 3.5rem;
+    }
+
+    .sport-bar-container {
+        max-width: 100%;
+        height: 32px;
     }
 
     .btn {
         padding: 6px 10px;
         font-size: 0.8rem;
+    }
+
+    .location-card {
+        padding: 16px;
     }
 }
 
