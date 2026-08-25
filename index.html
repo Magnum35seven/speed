@@ -1,74 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUD Speedometer</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <header class="app-header">
-        <div id="clock">13:48</div>
-        <div class="header-controls">
-            <!-- Persistent Unit Toggle -->
-            <button id="unit-toggle" class="btn btn-unit">KM/H</button>
-            <button id="reset-btn" class="btn btn-reset">
-                <span class="icon">🔄</span>
-                <span>Reset</span>
-            </button>
-            <button id="hud-toggle" class="btn btn-hud">
-                <span class="icon">🪞</span>
-                <span>HUD</span>
-            </button>
-        </div>
-    </header>
+<canvas id="speedometerCanvas"></canvas>
+</main>
 
-    <div class="mode-selector">
-        <button class="mode-btn active" data-mode="analog">Analog</button>
-        <button class="mode-btn" data-mode="minimalist">Minimalist</button>
-        <button class="mode-btn" data-mode="sport">Sport</button>
-        <button id="gforce-toggle" class="mode-btn gforce-btn">Enable G-Force</button>
-    </div>
+    <!-- Telemetry Footer Details -->
+    <!-- Telemetry Footer: Dedicated Location Display -->
+<footer class="telemetry-bar">
+      <div class="telemetry-item">
+        <span class="label">MAX SPEED</span>
+        <span class="value"><strong id="max-speed">0</strong> <small>KM/H</small></span>
+      </div>
+<div class="telemetry-item location-item">
+        <span class="label">LOCATION</span>
+        <span class="label">CURRENT LOCATION</span>
+<span id="road-name" class="value location-primary truncate">Locating...</span>
+<span id="suburb-name" class="sub-label location-secondary truncate">---</span>
+</div>
+      <div class="telemetry-item">
+        <span class="label">DISTANCE</span>
+        <span class="value"><strong id="trip-distance">0.0</strong> <small>KM</small></span>
+      </div>
+</footer>
 
-    <main class="hud-container">
-        <!-- Analog View -->
-        <div id="analog-view" class="card gauge-card view-section">
-            <div class="analog-gauge">
-                <svg class="gauge-svg" viewBox="0 0 200 200">
-                    <!-- Outer Dial Arc -->
-                    <path class="gauge-track" d="M 30 150 A 75 75 0 1 1 170 150" fill="none" stroke="#2c2d30" stroke-width="8" stroke-linecap="round"/>
-                    
-                    <!-- Dial Tick Marks & Labels -->
-                    <text x="32" y="152" class="tick-label">0</text>
-                    <text x="35" y="100" class="tick-label">20</text>
-                    <text x="58" y="58" class="tick-label">40</text>
-                    <text x="92" y="42" class="tick-label">60</text>
-                    <text x="100" y="30" class="tick-label">80</text>
-                    <text x="135" y="42" class="tick-label">100</text>
-                    <text x="162" y="58" class="tick-label">120</text>
-                    <text x="175" y="100" class="tick-label">140</text>
-                    <text x="168" y="152" class="tick-label">160</text>
-                    
-                    <!-- Needle -->
-                    <line id="needle" x1="100" y1="100" x2="45" y2="145" stroke="#1a73e8" stroke-width="4" stroke-linecap="round" />
-                    <circle cx="100" cy="100" r="7" fill="#1a73e8" />
-                </svg>
-
-                <div class="gauge-center-text">
-                    <span id="speed-value">0</span>
-                    <span id="unit-label" class="unit-label">KM/H</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Location Card -->
-        <div class="card location-card">
-            <span class="location-title">CURRENT LOCATION</span>
-            <div id="road-name" class="road-name">Locating...</div>
-            <div id="suburb-name" class="suburb-name"></div>
-        </div>
-    </main>
-
-    <script src="app.js"></script>
-</body>
-</html>
+    <!-- G-Force Panel -->
+    <!-- G-Force & Trip Stats Panel -->
+<section id="gforce-panel" class="gforce-panel hidden">
+<div class="g-stat">
+        <span class="g-label">LAT (X)</span>
+        <span id="g-x" class="g-value">0.00</span>
+        <span class="g-label">MAX SPEED</span>
+        <span class="g-value"><strong id="max-speed">0</strong> <small>KM/H</small></span>
+</div>
+<div class="g-stat">
+        <span class="g-label">LONG (Y)</span>
+        <span id="g-y" class="g-value">0.00</span>
+        <span class="g-label">DISTANCE</span>
+        <span class="g-value"><strong id="trip-distance">0.0</strong> <small>KM</small></span>
+</div>
+<div class="g-stat">
+        <span class="g-label">TOTAL FORCE</span>
+        <span class="g-label">G-FORCE</span>
+<span id="g-total" class="g-value highlight">0.00 G</span>
+</div>
+</section>
