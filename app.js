@@ -23,6 +23,7 @@ let modeViews = null;
 let maxSpeedEl = null;
 let maxSpeedUnitEl = null;
 let distanceEl = null;
+let distanceUnitEl = null;
 
 // App Initialization after DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
@@ -42,6 +43,7 @@ window.addEventListener('DOMContentLoaded', () => {
     maxSpeedEl = document.getElementById('max-speed');
     maxSpeedUnitEl = document.getElementById('max-speed-unit');
     distanceEl = document.getElementById('distance');
+    distanceUnitEl = document.getElementById('distance-unit');
 
     // Ensure UI matches persisted unit and initial rendering
     updateUnitUI();
@@ -162,12 +164,17 @@ function renderSpeed(speedMps) {
     if (sportSpeed) sportSpeed.textContent = displaySpeed;
 
     // Analog Needle Rotation
+    // The needle SVG shape is drawn pointing straight up (12 o'clock) at rest.
+    // Rotating it -135deg..+135deg around the hub (100,100) sweeps it across
+    // the "0" label (bottom-left) through to the "160"/"100" label (bottom-right).
     if (needleEl) {
         const maxScale = currentUnit === 'mph' ? 100 : 160;
         const pct = Math.min(displaySpeed / maxScale, 1);
-        // Needle rotates from -135 to +135 degrees (270 degree arc)
         const angle = -135 + (pct * 270);
-        needleEl.style.transform = `rotate(${angle}deg)`;
+        // Use the SVG rotate(angle, cx, cy) attribute form directly instead of a
+        // CSS transform, so the rotation pivot is always the gauge hub regardless
+        // of transform-origin/transform-box support in the host browser.
+        needleEl.setAttribute('transform', `rotate(${angle.toFixed(2)} 100 100)`);
     }
 
     // Sport Bar Gradient Dynamics
@@ -201,7 +208,12 @@ function updateStats() {
         maxSpeedEl.textContent = displayMaxSpeed;
     }
     if (distanceEl) {
-        distanceEl.textContent = totalDistanceKm.toFixed(1);
+        // Distance is tracked internally in km; convert to miles for display when in MPH mode
+        const displayDistance = currentUnit === 'mph' ? totalDistanceKm * 0.621371 : totalDistanceKm;
+        distanceEl.textContent = displayDistance.toFixed(1);
+    }
+    if (distanceUnitEl) {
+        distanceUnitEl.textContent = currentUnit === 'mph' ? 'MI' : 'KM';
     }
 }
 
