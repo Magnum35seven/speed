@@ -2,6 +2,10 @@
 let currentUnit = localStorage.getItem('speedUnit') || 'kmh';
 let currentSpeedMps = 0;
 let isHudFlipped = false;
+let maxSpeedMps = 0;
+let totalDistanceKm = 0;
+let lastLat = null;
+let lastLon = null;
 
 // DOM element references (populated on DOMContentLoaded)
 let speedValEls = null;
@@ -16,6 +20,9 @@ let roadNameEl = null;
 let suburbNameEl = null;
 let modeButtons = null;
 let modeViews = null;
+let maxSpeedEl = null;
+let maxSpeedUnitEl = null;
+let distanceEl = null;
 
 // App Initialization after DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
@@ -32,6 +39,9 @@ window.addEventListener('DOMContentLoaded', () => {
     suburbNameEl = document.getElementById('suburb-name');
     modeButtons = document.querySelectorAll('.mode-btn[data-mode]');
     modeViews = document.querySelectorAll('.mode-view');
+    maxSpeedEl = document.getElementById('max-speed');
+    maxSpeedUnitEl = document.getElementById('max-speed-unit');
+    distanceEl = document.getElementById('distance');
 
     // Ensure UI matches persisted unit and initial rendering
     updateUnitUI();
@@ -69,9 +79,14 @@ function initControls() {
     // 3. Reset Button
     if (resetBtn) {
         resetBtn.addEventListener('click', () => {
-            // Reset to zero and re-render everything
+            // Reset to zero and reset stats
             currentSpeedMps = 0;
+            maxSpeedMps = 0;
+            totalDistanceKm = 0;
+            lastLat = null;
+            lastLon = null;
             renderSpeed(0);
+            updateStats();
         });
     }
 }
@@ -80,6 +95,8 @@ function updateUnitUI() {
     const label = currentUnit === 'kmh' ? 'KM/H' : 'MPH';
     if (unitToggleBtn) unitToggleBtn.textContent = label;
     if (unitLblEls && unitLblEls.forEach) unitLblEls.forEach(el => el.textContent = label);
+    if (maxSpeedUnitEl) maxSpeedUnitEl.textContent = label;
+    updateStats();
 }
 
 // Mode Selection Switching (Analog, Minimalist, Sport)
@@ -123,24 +140,34 @@ function renderSpeed(speedMps) {
     currentSpeedMps = speedMps;
     if (speedMps === null || isNaN(speedMps) || speedMps < 0) speedMps = 0;
 
+    // Track max speed
+    if (speedMps > maxSpeedMps) {
+        maxSpeedMps = speedMps;
+    }
+
     const multiplier = currentUnit === 'mph' ? 2.23694 : 3.6;
     const displaySpeed = Math.round(speedMps * multiplier);
 
     // Update Speed Values across all views
-    if (speedValEls && speedValEls.forEach) speedValEls.forEach(el => el.textContent = displaySpeed);
+    if (speedValEls && speedValEls.forEach) {
+        speedValEls.forEach(el => el.textContent = displaySpeed);
+    }
 
-    // Analog Needle Rotation (if present)
+    // Update analog-specific elements
+    const analogSpeed = document.getElementById('analog-speed');
+    const minimalistSpeed = document.getElementById('minimalist-speed');
+    const sportSpeed = document.getElementById('sport-speed');
+    if (analogSpeed) analogSpeed.textContent = displaySpeed;
+    if (minimalistSpeed) minimalistSpeed.textContent = displaySpeed;
+    if (sportSpeed) sportSpeed.textContent = displaySpeed;
+
+    // Analog Needle Rotation
     if (needleEl) {
         const maxScale = currentUnit === 'mph' ? 100 : 160;
         const pct = Math.min(displaySpeed / maxScale, 1);
+        // Needle rotates from -135 to +135 degrees (270 degree arc)
         const angle = -135 + (pct * 270);
-
-        const rad = (angle - 90) * (Math.PI / 180);
-        const x2 = 100 + 60 * Math.cos(rad);
-        const y2 = 100 + 60 * Math.sin(rad);
-
-        needleEl.setAttribute('x2', x2);
-        needleEl.setAttribute('y2', y2);
+        needleEl.style.transform = `rotate(${angle}deg)`;
     }
 
     // Sport Bar Gradient Dynamics
@@ -154,10 +181,27 @@ function renderSpeed(speedMps) {
         if (speedInKmh <= 40) {
             sportBarEl.style.background = 'linear-gradient(90deg, #007aff, #00c6ff)';
         } else if (speedInKmh <= 80) {
-            sportBarEl.style.background = 'linear-gradient(90deg, #007aff, #34c759)';
+            sportBarEl.style.background = 'linear-gradient(90deg, #00c6ff, #34c759)';
+        } else if (speedInKmh <= 120) {
+            sportBarEl.style.background = 'linear-gradient(90deg, #34c759, #ffcc00)';
+        } else if (speedInKmh <= 150) {
+            sportBarEl.style.background = 'linear-gradient(90deg, #ffcc00, #ff6600)';
         } else {
-            sportBarEl.style.background = 'linear-gradient(90deg, #34c759, #ff3b30)';
+            sportBarEl.style.background = 'linear-gradient(90deg, #ff6600, #ff3300)';
         }
+    }
+
+    updateStats();
+}
+
+function updateStats() {
+    if (maxSpeedEl) {
+        const multiplier = currentUnit === 'mph' ? 2.23694 : 3.6;
+        const displayMaxSpeed = Math.round(maxSpeedMps * multiplier);
+        maxSpeedEl.textContent = displayMaxSpeed;
+    }
+    if (distanceEl) {
+        distanceEl.textContent = totalDistanceKm.toFixed(1);
     }
 }
 
@@ -172,6 +216,16 @@ function initGeolocation() {
 
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
+
+            // Calculate distance traveled
+            if (lastLat !== null && lastLon !== null && speed > 0.5) {
+                const distKm = calculateDistance(lastLat, lastLon, lat, lon);
+                totalDistanceKm += distKm;
+            }
+
+            lastLat = lat;
+            lastLon = lon;
+
             fetchLocation(lat, lon);
         },
         (error) => {
@@ -179,6 +233,18 @@ function initGeolocation() {
         },
         { enableHighAccuracy: true }
     );
+}
+
+// Haversine formula to calculate distance between two GPS points
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
 }
 
 function fetchLocation(lat, lon) {
