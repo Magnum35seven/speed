@@ -25,7 +25,7 @@ initControls();
 
 // Event Controls Setup
 function initControls() {
-    // 1. KM/H <-> MPH Toggle Button
+    // 1. KM/H <-> MPH Toggle Button with Persistence
     if (unitToggleBtn) {
         unitToggleBtn.addEventListener('click', () => {
             currentUnit = currentUnit === 'kmh' ? 'mph' : 'kmh';
