@@ -14,7 +14,7 @@ let unitToggleBtn = null;
 let hudToggleBtn = null;
 let resetBtn = null;
 let needleEl = null;
-let sportBarEl = null;
+let sportNeedleEl = null;
 let clockEl = null;
 let roadNameEl = null;
 let suburbNameEl = null;
@@ -34,7 +34,7 @@ window.addEventListener('DOMContentLoaded', () => {
     hudToggleBtn = document.getElementById('hud-toggle');
     resetBtn = document.getElementById('reset-btn');
     needleEl = document.getElementById('needle');
-    sportBarEl = document.getElementById('sport-bar');
+    sportNeedleEl = document.getElementById('sport-needle');
     clockEl = document.getElementById('clock');
     roadNameEl = document.getElementById('road-name');
     suburbNameEl = document.getElementById('suburb-name');
@@ -177,25 +177,15 @@ function renderSpeed(speedMps) {
         needleEl.setAttribute('transform', `rotate(${angle.toFixed(2)} 100 100)`);
     }
 
-    // Sport Bar Gradient Dynamics
-    if (sportBarEl) {
-        const maxScale = currentUnit === 'mph' ? 100 : 160;
-        const pct = Math.min((displaySpeed / maxScale) * 100, 100);
-        sportBarEl.style.width = `${pct}%`;
-
-        // Gradient color thresholds based on speed in km/h (user-facing thresholds)
-        const speedInKmh = speedMps * 3.6;
-        if (speedInKmh <= 40) {
-            sportBarEl.style.background = 'linear-gradient(90deg, #007aff, #00c6ff)';
-        } else if (speedInKmh <= 80) {
-            sportBarEl.style.background = 'linear-gradient(90deg, #00c6ff, #34c759)';
-        } else if (speedInKmh <= 120) {
-            sportBarEl.style.background = 'linear-gradient(90deg, #34c759, #ffcc00)';
-        } else if (speedInKmh <= 150) {
-            sportBarEl.style.background = 'linear-gradient(90deg, #ffcc00, #ff6600)';
-        } else {
-            sportBarEl.style.background = 'linear-gradient(90deg, #ff6600, #ff3300)';
-        }
+    // Sport Gauge Needle Rotation
+    // Same drawn-pointing-up-at-rest approach as the analog needle, but this dial
+    // is a semicircle (180deg) running 0 at the left end to 140 (or ~90mph) at
+    // the right end, pivoting on the dial's printed center point.
+    if (sportNeedleEl) {
+        const maxScale = currentUnit === 'mph' ? 90 : 140;
+        const pct = Math.min(displaySpeed / maxScale, 1);
+        const angle = -90 + (pct * 180);
+        sportNeedleEl.setAttribute('transform', `rotate(${angle.toFixed(2)} 766 746)`);
     }
 
     updateStats();
