@@ -1,116 +1,66 @@
-// Persistent Unit Selection State
-let currentUnit = localStorage.getItem('speedUnit') || 'kmh';
-let currentSpeedMps = 0;
+* HUD Speedometer - Complete PWA Engine
+*/
 
-// Elements
-const speedValueEl = document.getElementById('speed-value');
-const unitLabelEl = document.getElementById('unit-label');
-const unitToggleBtn = document.getElementById('unit-toggle');
-const needleEl = document.getElementById('needle');
-const clockEl = document.getElementById('clock');
-const roadNameEl = document.getElementById('road-name');
-const suburbNameEl = document.getElementById('suburb-name');
-const modeButtons = document.querySelectorAll('.mode-btn[data-mode]');
-
-// Initialize App State
-updateUnitUI();
-startClock();
-initModeSelector();
-
-// Unit Switch Event
-if (unitToggleBtn) {
-    unitToggleBtn.addEventListener('click', () => {
-        currentUnit = currentUnit === 'kmh' ? 'mph' : 'kmh';
-        localStorage.setItem('speedUnit', currentUnit);
-        updateUnitUI();
-        updateDisplay(currentSpeedMps);
-    });
+// --- 1. Accelerometer / G-Force Module ---
+// --- 1. Accelerometer / Smoothed G-Force Module ---
+class GForceTracker {
+constructor(onUpdate) {
+this.onUpdate = onUpdate;
+this.isListening = false;
+    this.smoothedG = 1.0;
+    this.alpha = 0.15; // Low-pass filter weight (prevents jitter)
 }
 
-function updateUnitUI() {
-    const label = currentUnit === 'kmh' ? 'KM/H' : 'MPH';
-    if (unitToggleBtn) unitToggleBtn.textContent = label;
-    if (unitLabelEl) unitLabelEl.textContent = label;
+async requestPermissionAndStart() {
+@@ -37,12 +39,13 @@ class GForceTracker {
+const xG = (accel.x || 0) / 9.80665;
+const yG = (accel.y || 0) / 9.80665;
+const zG = (accel.z || 0) / 9.80665;
+    const totalG = Math.sqrt(xG * xG + yG * yG + zG * zG);
+    const rawTotalG = Math.sqrt(xG * xG + yG * yG + zG * zG);
+
+    // Apply Low-pass filter to smooth out sensor noise
+    this.smoothedG = (rawTotalG * this.alpha) + (this.smoothedG * (1 - this.alpha));
+
+this.onUpdate({
+      x: xG.toFixed(2),
+      y: yG.toFixed(2),
+      total: totalG.toFixed(2)
+      total: this.smoothedG.toFixed(2)
+});
+}
+}
+@@ -210,7 +213,7 @@ class SpeedometerRenderer {
+ctx.fillText('KM/H', cx, cy + 70);
 }
 
-function updateDisplay(speedMps) {
-    currentSpeedMps = speedMps;
-    if (speedMps === null || isNaN(speedMps) || speedMps < 0) speedMps = 0;
+  // --- Theme 3: Sport Telemetry (Fixed Arc rendering) ---
+  // --- Theme 3: Sport Telemetry ---
+drawSport() {
+const { ctx, width, height, displayedSpeed } = this;
+const cx = width / 2;
+@@ -231,7 +234,7 @@ class SpeedometerRenderer {
+ctx.lineCap = 'round';
+ctx.stroke();
 
-    // Convert Speed
-    const multiplier = currentUnit === 'mph' ? 2.23694 : 3.6;
-    const speed = Math.round(speedMps * multiplier);
-
-    if (speedValueEl) speedValueEl.textContent = speed;
-
-    // Calculate Gauge Needle Rotation (-135deg to +135deg)
-    if (needleEl) {
-        const maxScale = currentUnit === 'mph' ? 100 : 160;
-        const percentage = Math.min(speed / maxScale, 1);
-        const angle = -135 + (percentage * 270);
-        
-        // Calculate needle position coordinates
-        const rad = (angle - 90) * (Math.PI / 180);
-        const x2 = 100 + 65 * Math.cos(rad);
-        const y2 = 100 + 65 * Math.sin(rad);
-        
-        needleEl.setAttribute('x2', x2);
-        needleEl.setAttribute('y2', y2);
-    }
+    // Active Speed Progress Arc
+    // Speed Progress Arc
+if (displayedSpeed > 0) {
+ctx.beginPath();
+ctx.arc(cx, cy, radius, startAngle, currentAngle);
+@@ -241,7 +244,6 @@ class SpeedometerRenderer {
+ctx.stroke();
 }
 
-// Mode Selector Buttons
-function initModeSelector() {
-    modeButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            modeButtons.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        });
-    });
-}
+    // Central Speed readout
+ctx.fillStyle = '#ffffff';
+ctx.font = '900 95px sans-serif';
+ctx.textAlign = 'center';
+@@ -378,8 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
+});
 
-// Geolocation Handling
-if ('geolocation' in navigator) {
-    navigator.geolocation.watchPosition(
-        (position) => {
-            const speed = position.coords.speed || 0;
-            updateDisplay(speed);
-
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            fetchLocationDetails(lat, lon);
-        },
-        (error) => {
-            if (roadNameEl) roadNameEl.textContent = 'Location unavailable';
-            console.error('Geolocation error:', error);
-        },
-        { enableHighAccuracy: true }
-    );
-}
-
-function fetchLocationDetails(lat, lon) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data && data.address) {
-                const road = data.address.road || data.address.pedestrian || 'Unknown Road';
-                const suburb = data.address.suburb || data.address.town || data.address.city || '';
-                
-                if (roadNameEl) roadNameEl.textContent = road;
-                if (suburbNameEl) suburbNameEl.textContent = suburb;
-            }
-        })
-        .catch(() => {});
-}
-
-// Clock Setup
-function startClock() {
-    function updateClock() {
-        const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        if (clockEl) clockEl.textContent = `${h}:${m}`;
-    }
-    updateClock();
-    setInterval(updateClock, 1000);
-}
+const gTracker = new GForceTracker((data) => {
+    document.getElementById('g-x').textContent = data.x;
+    document.getElementById('g-y').textContent = data.y;
+document.getElementById('g-total').textContent = `${data.total} G`;
+});
