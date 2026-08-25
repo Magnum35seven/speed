@@ -39,20 +39,78 @@
         <div id="analog-view" class="card gauge-card mode-view active">
             <div class="gauge-wrapper">
                 <svg class="gauge-svg" viewBox="0 0 200 200">
-                    <path class="gauge-track" d="M 30 150 A 70 70 0 1 1 170 150" fill="none" stroke="#252629" stroke-width="8" stroke-linecap="round"/>
-                    
-                    <text x="32" y="152" class="tick">0</text>
-                    <text x="35" y="100" class="tick">20</text>
-                    <text x="58" y="58" class="tick">40</text>
-                    <text x="92" y="38" class="tick">60</text>
-                    <text x="100" y="30" class="tick">80</text>
-                    <text x="110" y="38" class="tick">100</text>
-                    <text x="142" y="58" class="tick">120</text>
-                    <text x="165" y="100" class="tick">140</text>
-                    <text x="168" y="152" class="tick">160</text>
+                    <defs>
+                        <radialGradient id="faceGradient" cx="50%" cy="40%" r="75%">
+                            <stop offset="0%" stop-color="#202126"/>
+                            <stop offset="100%" stop-color="#08080a"/>
+                        </radialGradient>
+                    </defs>
 
-                    <line id="needle" x1="100" y1="100" x2="50" y2="150" stroke="#007aff" stroke-width="4" stroke-linecap="round"/>
-                    <circle cx="100" cy="100" r="6" fill="#007aff"/>
+                    <circle cx="100" cy="100" r="96" class="gauge-face"/>
+                    <path class="gauge-track" d="M 37.77 162.23 A 88 88 0 1 1 162.23 162.23" fill="none"/>
+
+                    <!-- tiny ticks (every 5) -->
+                    <g class="ticks-tiny">
+                        <line x1="29.32" y1="152.42" x2="32.53" y2="150.04"/>
+                        <line x1="17.14" y1="129.65" x2="20.91" y2="128.30"/>
+                        <line x1="12.11" y1="104.32" x2="16.10" y2="104.12"/>
+                        <line x1="14.64" y1="78.62" x2="18.52" y2="79.59"/>
+                        <line x1="24.52" y1="54.76" x2="27.95" y2="56.82"/>
+                        <line x1="40.90" y1="34.80" x2="43.59" y2="37.76"/>
+                        <line x1="62.38" y1="20.45" x2="64.09" y2="24.06"/>
+                        <line x1="87.09" y1="12.95" x2="87.67" y2="16.91"/>
+                        <line x1="112.91" y1="12.95" x2="112.33" y2="16.91"/>
+                        <line x1="137.62" y1="20.45" x2="135.91" y2="24.06"/>
+                        <line x1="159.10" y1="34.80" x2="156.41" y2="37.76"/>
+                        <line x1="175.48" y1="54.76" x2="172.05" y2="56.82"/>
+                        <line x1="185.36" y1="78.62" x2="181.48" y2="79.59"/>
+                        <line x1="187.89" y1="104.32" x2="183.90" y2="104.12"/>
+                        <line x1="182.86" y1="129.65" x2="179.09" y2="128.30"/>
+                        <line x1="170.68" y1="152.42" x2="167.47" y2="150.04"/>
+                    </g>
+
+                    <!-- minor ticks (every 10) -->
+                    <g class="ticks-minor">
+                        <line x1="22.39" y1="141.48" x2="28.56" y2="138.18"/>
+                        <line x1="12.42" y1="91.37" x2="19.39" y2="92.06"/>
+                        <line x1="31.98" y1="44.17" x2="37.39" y2="48.61"/>
+                        <line x1="74.45" y1="15.79" x2="76.49" y2="22.49"/>
+                        <line x1="125.55" y1="15.79" x2="123.51" y2="22.49"/>
+                        <line x1="168.02" y1="44.17" x2="162.61" y2="48.61"/>
+                        <line x1="187.58" y1="91.37" x2="180.61" y2="92.06"/>
+                        <line x1="177.61" y1="141.48" x2="171.44" y2="138.18"/>
+                    </g>
+
+                    <!-- major ticks (every 20) -->
+                    <g class="ticks-major">
+                        <line x1="37.77" y1="162.23" x2="46.26" y2="153.74"/>
+                        <line x1="13.69" y1="117.17" x2="25.46" y2="114.83"/>
+                        <line x1="18.70" y1="66.32" x2="29.79" y2="70.92"/>
+                        <line x1="51.11" y1="26.83" x2="57.78" y2="36.81"/>
+                        <line x1="100.00" y1="12.00" x2="100.00" y2="24.00"/>
+                        <line x1="148.89" y1="26.83" x2="142.22" y2="36.81"/>
+                        <line x1="181.30" y1="66.32" x2="170.21" y2="70.92"/>
+                        <line x1="186.31" y1="117.17" x2="174.54" y2="114.83"/>
+                        <line x1="162.23" y1="162.23" x2="153.74" y2="153.74"/>
+                    </g>
+
+                    <!-- labels -->
+                    <g class="tick-labels">
+                        <text x="54.75" y="145.25">0</text>
+                        <text x="37.23" y="112.49">20</text>
+                        <text x="40.87" y="75.51">40</text>
+                        <text x="64.44" y="46.79">60</text>
+                        <text x="100.00" y="36.00">80</text>
+                        <text x="135.56" y="46.79">100</text>
+                        <text x="159.13" y="75.51">120</text>
+                        <text x="162.77" y="112.49">140</text>
+                        <text x="145.25" y="145.25">160</text>
+                    </g>
+
+                    <!-- needle: drawn pointing straight up at rest, rotated by JS around the hub (100,100) -->
+                    <polygon id="needle" points="100,24 96.5,106 100,113 103.5,106" class="needle"/>
+                    <circle cx="100" cy="100" r="8" class="needle-hub"/>
+                    <circle cx="100" cy="100" r="3" class="needle-hub-inner"/>
                 </svg>
 
                 <div class="speed-readout">
@@ -78,6 +136,25 @@
             </div>
             <div class="sport-bar-container">
                 <div id="sport-bar" class="sport-bar"></div>
+            </div>
+        </div>
+
+        <!-- Stats: Max Speed & Distance (cleared by Reset) -->
+        <div class="card stats-card">
+            <div class="stat-block">
+                <span class="stat-title">MAX SPEED</span>
+                <div class="stat-value">
+                    <span id="max-speed">0</span>
+                    <span id="max-speed-unit" class="stat-unit">KM/H</span>
+                </div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-block">
+                <span class="stat-title">DISTANCE</span>
+                <div class="stat-value">
+                    <span id="distance">0.0</span>
+                    <span id="distance-unit" class="stat-unit">KM</span>
+                </div>
             </div>
         </div>
 
