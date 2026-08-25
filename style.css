@@ -22,29 +22,33 @@ body {
 /* Header */
 .app-header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    padding: 12px 16px;
+    padding: 14px 16px;
     background-color: #1a1b1e;
     border-bottom: 1px solid #252629;
     z-index: 100;
-    gap: 16px;
+    gap: 12px;
     flex-shrink: 0;
 }
 
-.header-left,
-.header-right {
+.clock-row {
     display: flex;
-    gap: 8px;
-    flex: 1;
+    justify-content: center;
+    width: 100%;
 }
 
-.header-right {
-    justify-content: flex-end;
+.controls-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    width: 100%;
 }
 
 #clock {
-    font-size: 2rem;
+    font-size: 2.4rem;
     font-weight: 800;
     font-family: 'Monaco', 'Courier New', monospace;
     white-space: nowrap;
@@ -161,8 +165,8 @@ main.hud-container {
 }
 
 .gauge-svg {
-    width: 300px;
-    height: 300px;
+    width: 340px;
+    height: 340px;
     max-width: 100%;
     overflow: visible;
 }
@@ -227,7 +231,7 @@ main.hud-container {
 
 .speed-readout {
     position: absolute;
-    top: 62%;
+    top: 72%;
     left: 50%;
     transform: translate(-50%, -50%);
     display: flex;
@@ -295,45 +299,82 @@ main.hud-container {
 
 /* Sport Mode View */
 .sport-card {
-    padding: 60px 40px;
+    padding: 40px 24px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 40px;
+    gap: 20px;
     background: linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%);
 }
 
+.sport-gauge-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000000;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.sport-gauge-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.5));
+}
+
+.sport-needle-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.sport-needle {
+    fill: #007aff;
+    filter: drop-shadow(0 0 6px rgba(0, 122, 255, 0.9));
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sport-needle-hub {
+    fill: #101114;
+    stroke: #007aff;
+    stroke-width: 6;
+    filter: drop-shadow(0 0 5px rgba(0, 122, 255, 0.8));
+}
+
+.sport-needle-hub-inner {
+    fill: #007aff;
+}
+
 .sport-readout {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
-    order: 2;
+    gap: 1px;
+    text-align: center;
+    background: linear-gradient(180deg, #0e0f12, #0a0a0c);
+    border: 1px solid #26272c;
+    border-radius: 8px;
+    padding: 6px 16px 8px;
+    box-shadow: inset 0 0 8px rgba(0, 122, 255, 0.15), 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .sport-readout .speed-val {
-    font-size: 5rem;
+    font-size: 2.2rem;
 }
 
-.sport-bar-container {
-    width: 100%;
-    max-width: 500px;
-    height: 40px;
-    background-color: #232427;
-    border-radius: 20px;
-    overflow: hidden;
-    padding: 3px;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
-    order: 1;
-}
-
-.sport-bar {
-    height: 100%;
-    width: 0%;
-    border-radius: 18px;
-    background: linear-gradient(90deg, #007aff, #00c6ff);
-    transition: width 0.3s ease, background 0.4s ease;
-    box-shadow: 0 0 12px rgba(0, 122, 255, 0.8);
+.sport-readout .unit-lbl {
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
 }
 
 /* Stats Card: Max Speed & Distance */
@@ -352,6 +393,8 @@ main.hud-container {
     flex: 1;
     display: flex;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: 4px;
 }
 
@@ -366,6 +409,7 @@ main.hud-container {
 .stat-value {
     display: flex;
     align-items: baseline;
+    justify-content: center;
     gap: 6px;
 }
 
@@ -395,6 +439,8 @@ main.hud-container {
     width: 100%;
     height: auto;
     flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: 8px;
     padding: 20px;
     background-color: #1a1b1e;
@@ -404,11 +450,12 @@ main.hud-container {
 }
 
 .location-title {
-    font-size: 0.75rem;
-    color: #8a8c91;
-    font-weight: 700;
+    font-size: 1.1rem;
+    color: #ffd400;
+    font-weight: 800;
     letter-spacing: 0.15em;
     text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(255, 212, 0, 0.35);
 }
 
 .road-name {
@@ -443,10 +490,11 @@ main.hud-container::-webkit-scrollbar {
 @media (max-width: 600px) {
     .app-header {
         padding: 10px 12px;
+        gap: 8px;
     }
 
     #clock {
-        font-size: 1.2rem;
+        font-size: 1.9rem;
     }
 
     .mode-selector {
@@ -460,8 +508,8 @@ main.hud-container::-webkit-scrollbar {
     }
 
     .gauge-svg {
-        width: 200px;
-        height: 200px;
+        width: 260px;
+        height: 260px;
     }
 
     .speed-val {
@@ -473,17 +521,12 @@ main.hud-container::-webkit-scrollbar {
     }
 
     .sport-card {
-        padding: 40px 20px;
-        gap: 30px;
+        padding: 30px 16px;
+        gap: 16px;
     }
 
     .sport-readout .speed-val {
-        font-size: 3.5rem;
-    }
-
-    .sport-bar-container {
-        max-width: 100%;
-        height: 32px;
+        font-size: 1.8rem;
     }
 
     .btn {
@@ -493,6 +536,10 @@ main.hud-container::-webkit-scrollbar {
 
     .location-card {
         padding: 16px;
+    }
+
+    .location-title {
+        font-size: 0.95rem;
     }
 }
 
