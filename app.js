@@ -24,6 +24,7 @@ let maxSpeedEl = null;
 let maxSpeedUnitEl = null;
 let distanceEl = null;
 let distanceUnitEl = null;
+let wakeLock = null;
 
 // App Initialization after DOM is ready
 window.addEventListener('DOMContentLoaded', () => {
@@ -54,6 +55,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Render initial zero speed so all views show a default value
     renderSpeed(currentSpeedMps);
+
+    // Keep the screen awake while the app is in use (e.g. mounted in a car).
+    requestWakeLock();
+});
+
+// Screen Wake Lock — prevents the display from sleeping while the app is
+// open. The lock is released automatically by the OS/browser whenever the
+// tab is hidden (backgrounded, screen locked, etc), so it must be
+// re-requested every time the page becomes visible again.
+async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+            wakeLock = null;
+        });
+    } catch (err) {
+        // Fails if the tab isn't visible yet, battery saver is on, etc.
+        // Non-fatal — visibilitychange below will retry.
+        console.log('Wake Lock Error:', err);
+    }
+}
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+        requestWakeLock();
+    }
 });
 
 // Event Controls Setup
