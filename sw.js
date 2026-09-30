@@ -1,11 +1,8 @@
-const CACHE_NAME = 'hud-speed-v05';
+const CACHE_NAME = 'hud-speed-v06';
 
 // Relative paths resolve against the service worker's own scope,
 // so this works whether hosted at a domain root or a GitHub Pages
 // repo subpath (https://user.github.io/repo-name/) without changes.
-// Note: the sport-gauge artwork is embedded directly in index.html as a
-// base64 data URI (not a separate file), so it loads with the page itself
-// and never depends on a separate cached/network request.
 const ASSETS = [
     './',
     './index.html',
