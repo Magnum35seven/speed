@@ -14,7 +14,6 @@ let unitToggleBtn = null;
 let hudToggleBtn = null;
 let resetBtn = null;
 let needleEl = null;
-let sportNeedleEl = null;
 let clockEl = null;
 let roadNameEl = null;
 let suburbNameEl = null;
@@ -35,7 +34,6 @@ window.addEventListener('DOMContentLoaded', () => {
     hudToggleBtn = document.getElementById('hud-toggle');
     resetBtn = document.getElementById('reset-btn');
     needleEl = document.getElementById('needle');
-    sportNeedleEl = document.getElementById('sport-needle');
     clockEl = document.getElementById('clock');
     roadNameEl = document.getElementById('road-name');
     suburbNameEl = document.getElementById('suburb-name');
@@ -129,7 +127,7 @@ function updateUnitUI() {
     updateStats();
 }
 
-// Mode Selection Switching (Analog, Minimalist, Sport)
+// Mode Selection Switching (Analog, Minimalist)
 function initModes() {
     if (!modeButtons || modeButtons.length === 0) return;
 
@@ -183,14 +181,6 @@ function renderSpeed(speedMps) {
         speedValEls.forEach(el => el.textContent = displaySpeed);
     }
 
-    // Update analog-specific elements
-    const analogSpeed = document.getElementById('analog-speed');
-    const minimalistSpeed = document.getElementById('minimalist-speed');
-    const sportSpeed = document.getElementById('sport-speed');
-    if (analogSpeed) analogSpeed.textContent = displaySpeed;
-    if (minimalistSpeed) minimalistSpeed.textContent = displaySpeed;
-    if (sportSpeed) sportSpeed.textContent = displaySpeed;
-
     // Analog Needle Rotation
     // The needle SVG shape is drawn pointing straight up (12 o'clock) at rest.
     // Rotating it -135deg..+135deg around the hub (100,100) sweeps it across
@@ -203,17 +193,6 @@ function renderSpeed(speedMps) {
         // CSS transform, so the rotation pivot is always the gauge hub regardless
         // of transform-origin/transform-box support in the host browser.
         needleEl.setAttribute('transform', `rotate(${angle.toFixed(2)} 100 100)`);
-    }
-
-    // Sport Gauge Needle Rotation
-    // Same drawn-pointing-up-at-rest approach as the analog needle, but this dial
-    // is a semicircle (180deg) running 0 at the left end to 140 (or ~90mph) at
-    // the right end, pivoting on the dial's printed center point.
-    if (sportNeedleEl) {
-        const maxScale = currentUnit === 'mph' ? 90 : 140;
-        const pct = Math.min(displaySpeed / maxScale, 1);
-        const angle = -90 + (pct * 180);
-        sportNeedleEl.setAttribute('transform', `rotate(${angle.toFixed(2)} 766 746)`);
     }
 
     updateStats();
